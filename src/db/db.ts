@@ -3,4 +3,4 @@ import mysql from "mysql2/promise";
 
 const connection = await mysql.createConnection(process.env.DB_URL as string);
 
-const db = drizzle(connection);
+export const db = drizzle(connection);

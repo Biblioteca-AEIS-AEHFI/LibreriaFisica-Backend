@@ -7,6 +7,7 @@ import {
   mysqlEnum,
   date,
 } from "drizzle-orm/mysql-core";
+import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
 export const users = mysqlTable("users", {
   userId: int("user_id").primaryKey().autoincrement(), // TODO: Change this to UUID
@@ -21,6 +22,9 @@ export const users = mysqlTable("users", {
 
 export type NewUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
+
+export const newUserSchema = createInsertSchema(users);
+export const userSchema = createSelectSchema(users);
 
 // export const books = mysqlTable("books", {
 //   bookId: int("book_id").primaryKey().autoincrement(),
