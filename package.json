@@ -11,10 +11,12 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "body-parser": "^1.20.2",
     "drizzle-orm": "^0.32.0",
     "drizzle-zod": "^0.5.1",
     "express": "^4.19.2",
-    "mysql2": "^3.10.2"
+    "mysql2": "^3.10.2",
+    "zod": "^3.23.8"
   },
   "scripts": {
     "dev": "bun --hot run src/index.ts"
