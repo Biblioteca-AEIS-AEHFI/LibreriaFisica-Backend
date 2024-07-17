@@ -6,6 +6,7 @@ import {
   int,
   mysqlEnum,
   date,
+  boolean,
 } from "drizzle-orm/mysql-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
@@ -14,10 +15,13 @@ export const users = mysqlTable("users", {
   firstName: varchar("first_name", { length: 35 }),
   lastName: varchar("last_name", { length: 35 }),
   email: varchar("email", { length: 40 }).notNull().unique(),
+  phoneNumber: varchar("phone_number", { length: 8 }),
   account: varchar("account", { length: 11 }).notNull().unique(),
   userType: mysqlEnum("user_type", ["normal", "admin"]).notNull(), // Tipo de Usuario
-  lendingScore: int("lending_score").notNull().default(100), // Reputación
-  passwordHash: varchar("password_hash", { length: 60 }).notNull().unique(),
+  // lendingScore: int("lending_score").notNull().default(100), // Reputación -> Nombre (buena, mala, regular)
+  password: varchar("password", { length: 60 }).notNull().unique(),
+  // verified: boolean("verified").default(false) // TODO: Verified
+  // deleted: boolean("deleted").default(false)
 });
 
 export type NewUser = typeof users.$inferInsert;
@@ -25,6 +29,12 @@ export type User = typeof users.$inferSelect;
 
 export const newUserSchema = createInsertSchema(users);
 export const userSchema = createSelectSchema(users);
+
+// Invites
+// Request
+// Forma03
+
+// Registry API????
 
 // export const books = mysqlTable("books", {
 //   bookId: int("book_id").primaryKey().autoincrement(),
@@ -34,6 +44,7 @@ export const userSchema = createSelectSchema(users);
 //   year: int("year"),
 //   publisher: varchar("publisher", { length: 30 }),
 //   language: varchar("language", { length: 15 }),
+//   // language: mysqlEnum("language", ["spanish", "english"]), // Enum
 //   isbn: varchar("isbn", { length: 13 }).unique().notNull(),
 //   amount: int("amount"),
 // });

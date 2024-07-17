@@ -3,8 +3,7 @@ import { newUserSchema, users, type NewUser } from "../db/schema";
 import { db } from "../db/db";
 
 const bcrypt = require("bcrypt");
-
-const hashSalts = 10;
+const saltRounds = 10;
 
 export const authRouter: Router = Router();
 
@@ -18,12 +17,12 @@ authRouter.post("/signup", async (req: Request, res: Response) => {
   console.log("Reached!");
   try {
     let userData = parsedUser!.data as NewUser;
-    // TODO: Hash password for storage
+    // Hash password for storage
     const hashedPassword = await bcrypt.hash(
-      parsedUser.data!.passwordHash,
-      hashSalts
+      parsedUser.data!.password,
+      saltRounds
     );
-    userData!.passwordHash = hashedPassword;
+    userData!.password = hashedPassword;
     // TODO: Implement UUID for userId
     await db.insert(users).values(userData);
     return res.status(200).send(`Inserted new user ${parsedUser.data?.email}`);
