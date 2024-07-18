@@ -35,8 +35,8 @@ userRouter.post("/login", async (req: Request, res: Response) => {
 
   if (!matchPassword)
     return res.status(401).json({ msg: "User credentials are not valid" });
+
   //TODO: se deberia crear una session cookie para el usuario
-  
   res.status(200).json(user);
 });
 
