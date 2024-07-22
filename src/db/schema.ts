@@ -12,6 +12,7 @@ import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
 export const users = mysqlTable("users", {
   userId: int("user_id").primaryKey().autoincrement(), // TODO: Change this to UUID
+  numeroCuenta: varchar("numero_cuenta", { length: 15 }).unique(),
   firstName: varchar("first_name", { length: 35 }),
   lastName: varchar("last_name", { length: 35 }),
   email: varchar("email", { length: 40 }).notNull().unique(),
