@@ -1,9 +1,9 @@
 import express, { type Application } from "express";
 import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
-import { userRouter } from "./routes/users";
+import { userRouter } from "./routes/user";
 import { authRouter } from "./routes/auth";
-import { verifyToken } from "./middlewares/authMiddleware";
+import { authenticatedUser } from "./middleware/auth.middleware";
 
 const port: String | Number = process.env.PORT || 8080;
 
@@ -13,7 +13,7 @@ app.use(bodyParser.json());
 app.use("/auth", authRouter);
 
 app.use(cookieParser());
-app.use(verifyToken);
+app.use(authenticatedUser);
 app.use("/user", userRouter);
 
 app.listen(port, () => {

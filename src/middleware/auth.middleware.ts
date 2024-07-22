@@ -5,7 +5,7 @@ export interface CustomRequest extends Request {
   token: string | JwtPayload;
 }
 
-export function verifyToken(req: Request, res: Response, next: NextFunction) {
+export function authenticatedUser(req: Request, res: Response, next: NextFunction) {
   const token = req.cookies.access_token;
   if (!token) {
     return res.status(401).json({ msg: "access denied" });
