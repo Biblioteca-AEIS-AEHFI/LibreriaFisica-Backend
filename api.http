@@ -14,14 +14,14 @@ POST http://localhost:3000/auth/signup
 Content-Type: application/json
 
 {
-  "numeroCuenta": "20221001805",
+  "numeroCuenta": "20221001806",
   "password": "password",
   "firstName": "carlos",
   "secondName": "thomas",
   "firstSurname": "flores",
-  "email": "carlos@unah.hn",
-  "phoneNumber": "12345658",
-  "account": "carlos123",
+  "email": "thomas@unah.hn",
+  "phoneNumber": "13345658",
+  "account": "thomas123",
   "userType": 1,
   "reputation": 1
 }
