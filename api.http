@@ -1,8 +1,8 @@
-POST http://localhost:3000/user/login
+POST http://localhost:3000/auth/login
 Content-Type: application/json
 
 {
-  "numeroCuenta": "20221001803",
+  "numeroCuenta": "20221001805",
   "password": "password"
 }
 
@@ -14,12 +14,14 @@ POST http://localhost:3000/auth/signup
 Content-Type: application/json
 
 {
-  "numeroCuenta": "20221001804",
+  "numeroCuenta": "20221001805",
   "password": "password",
-  "firstName": "gerardo",
-  "lastName": "flores",
-  "email": "gerardo@unah.hn",
-  "phoneNumber": "12345678",
-  "account": "gerardo123",
-  "userType": "normal"
+  "firstName": "carlos",
+  "secondName": "thomas",
+  "firstSurname": "flores",
+  "email": "carlos@unah.hn",
+  "phoneNumber": "12345658",
+  "account": "carlos123",
+  "userType": 1,
+  "reputation": 1
 }
