@@ -13,11 +13,13 @@
   "dependencies": {
     "@types/bcrypt": "^5.0.2",
     "@types/cookie-parser": "^1.4.7",
+    "@types/cors": "^2.8.17",
     "@types/jsonwebtoken": "^9.0.6",
     "@types/swagger-ui-express": "^4.1.6",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.2",
     "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
     "drizzle-orm": "^0.32.0",
     "drizzle-zod": "^0.5.1",
     "express": "^4.19.2",

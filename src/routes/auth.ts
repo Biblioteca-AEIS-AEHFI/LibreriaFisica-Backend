@@ -1,5 +1,5 @@
 import { Router, type Request, type Response } from "express";
-import { newUserSchema, users, type NewUser, type User } from "../db/schema";
+import { NewUserSchema, users, type NewUser, type User } from "../db/schema";
 import { loginSchema } from "../utils/definitions";
 import { db } from "../db/db";
 
@@ -8,13 +8,12 @@ import { ZodError } from "zod";
 import * as jwt from "jsonwebtoken";
 import * as bcrypt from "bcrypt";
 
-const saltRounds = 10;
-
+const saltRounds: number = Number(process.env.SALT_ROUND) || 10;
 export const authRouter: Router = Router();
 
 authRouter.post("/signup", async (req: Request, res: Response) => {
   let user = req.body;
-  const parsedUser = newUserSchema.safeParse(user);
+  const parsedUser = NewUserSchema.safeParse(user);
 
   if (!parsedUser.success) {
     return res.status(400).send("Invalid request");
@@ -32,7 +31,8 @@ authRouter.post("/signup", async (req: Request, res: Response) => {
     await db.insert(users).values(userData);
     return res.status(200).send(`Inserted new user ${parsedUser.data?.email}`);
   } catch (error) {
-    console.log(error);
+    console.log("error", error);
+    return res.status(500).json({ msg: "Could not create user" });
   }
 });
 
@@ -71,7 +71,12 @@ authRouter.post("/login", async (req: Request, res: Response) => {
       expiresIn: "7d",
     });
 
-    res.status(200).cookie("access_token", token).json(user);
+    res
+      .status(200)
+      .cookie("access_token", token, {
+        maxAge: 7 * 24 * 60 * 60,
+      })
+      .json(user);
   } catch (error) {
     return res.status(500).json({ msg: "Error while login", e: error });
   }
