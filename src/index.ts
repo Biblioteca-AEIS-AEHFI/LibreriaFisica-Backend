@@ -4,6 +4,7 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import { userRouter } from "./routes/user";
 import { authRouter } from "./routes/auth";
+import { author } from "./routes/authors";
 import { verifyToken } from "./middleware/auth.middleware";
 
 const port: String | Number = process.env.PORT || 8080;
@@ -18,11 +19,15 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 app.use(bodyParser.json());
+app.use(cookieParser());
+
 app.use("/auth", authRouter);
 
-app.use(cookieParser());
 app.use(verifyToken);
 app.use("/user", userRouter);
+app.use("/author", author);
+
+export { app };
 
 app.listen(port, () => {
   console.log(`App running on port ${port}`);
