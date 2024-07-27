@@ -1,5 +1,10 @@
 import { Router, type Request, type Response } from "express";
-import { newUserSchema, users, type NewUser, type User } from "../db/schema";
+import {
+  NewUserSchema,
+  users,
+  type NewUser,
+  type User,
+} from "../db/schema/users";
 import { loginSchema } from "../utils/definitions";
 import { db } from "../db/db";
 
@@ -14,7 +19,7 @@ export const authRouter: Router = Router();
 
 authRouter.post("/signup", async (req: Request, res: Response) => {
   let user = req.body;
-  const parsedUser = newUserSchema.safeParse(user);
+  const parsedUser = NewUserSchema.safeParse(user);
 
   if (!parsedUser.success) {
     return res.status(400).send("Invalid request");
@@ -50,7 +55,7 @@ authRouter.post("/login", async (req: Request, res: Response) => {
     const userQuery: User[] | any = await db
       .select()
       .from(users)
-      .where(eq(users.numeroCuenta, numeroCuenta));
+      .where(eq(users.account, numeroCuenta));
 
     const user = userQuery[0];
     if (!user)
