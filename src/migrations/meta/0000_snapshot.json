@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "6355c950-5a3b-4dd4-92db-54e4581fec8f",
+  "id": "0c685b69-5c89-4c98-9d82-425e780e047c",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "authors": {
@@ -627,11 +627,25 @@
           "name": "first_name",
           "type": "varchar(35)",
           "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "second_name": {
+          "name": "second_name",
+          "type": "varchar(35)",
+          "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "last_name": {
-          "name": "last_name",
+        "first_surname": {
+          "name": "first_surname",
+          "type": "varchar(35)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "second_surname": {
+          "name": "second_surname",
           "type": "varchar(35)",
           "primaryKey": false,
           "notNull": false,
@@ -658,8 +672,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "user_type_id": {
-          "name": "user_type_id",
+        "user_type": {
+          "name": "user_type",
           "type": "int",
           "primaryKey": false,
           "notNull": true,
@@ -690,12 +704,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "users_user_type_id_user_types_user_type_id_fk": {
-          "name": "users_user_type_id_user_types_user_type_id_fk",
+        "users_user_type_user_types_user_type_id_fk": {
+          "name": "users_user_type_user_types_user_type_id_fk",
           "tableFrom": "users",
           "tableTo": "user_types",
           "columnsFrom": [
-            "user_type_id"
+            "user_type"
           ],
           "columnsTo": [
             "user_type_id"

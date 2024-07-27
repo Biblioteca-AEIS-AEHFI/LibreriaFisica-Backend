@@ -77,12 +77,14 @@ CREATE TABLE `reserves` (
 --> statement-breakpoint
 CREATE TABLE `users` (
 	`user_id` int AUTO_INCREMENT NOT NULL,
-	`first_name` varchar(35),
-	`last_name` varchar(35),
+	`first_name` varchar(35) NOT NULL,
+	`second_name` varchar(35),
+	`first_surname` varchar(35) NOT NULL,
+	`second_surname` varchar(35),
 	`email` varchar(40) NOT NULL,
 	`phone_number` varchar(8),
 	`account` varchar(11) NOT NULL,
-	`user_type_id` int NOT NULL,
+	`user_type` int NOT NULL,
 	`reputation` int NOT NULL,
 	`password` varchar(60) NOT NULL,
 	`verified` boolean DEFAULT false,
@@ -109,5 +111,5 @@ ALTER TABLE `payments` ADD CONSTRAINT `payments_user_id_users_user_id_fk` FOREIG
 ALTER TABLE `payments` ADD CONSTRAINT `payments_admin_id_users_user_id_fk` FOREIGN KEY (`admin_id`) REFERENCES `users`(`user_id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `reserves` ADD CONSTRAINT `reserves_book_id_books_book_id_fk` FOREIGN KEY (`book_id`) REFERENCES `books`(`book_id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `reserves` ADD CONSTRAINT `reserves_user_id_users_user_id_fk` FOREIGN KEY (`user_id`) REFERENCES `users`(`user_id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `users` ADD CONSTRAINT `users_user_type_id_user_types_user_type_id_fk` FOREIGN KEY (`user_type_id`) REFERENCES `user_types`(`user_type_id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `users` ADD CONSTRAINT `users_user_type_user_types_user_type_id_fk` FOREIGN KEY (`user_type`) REFERENCES `user_types`(`user_type_id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `users` ADD CONSTRAINT `users_reputation_reputation_reputation_id_fk` FOREIGN KEY (`reputation`) REFERENCES `reputation`(`reputation_id`) ON DELETE no action ON UPDATE no action;

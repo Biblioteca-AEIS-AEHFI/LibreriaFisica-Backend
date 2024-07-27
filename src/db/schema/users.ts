@@ -11,13 +11,13 @@ import { payments } from "./payments";
 export const users = mysqlTable("users", {
   userId: int("user_id").primaryKey().autoincrement(),
   firstName: varchar("first_name", { length: 35 }).notNull(),
-  secondName: varchar("first_name", { length: 35 }),
-  firstSurname: varchar("last_name", { length: 35 }).notNull(),
-  secondSurname: varchar("last_name", { length: 35 }),
+  secondName: varchar("second_name", { length: 35 }),
+  firstSurname: varchar("first_surname", { length: 35 }).notNull(),
+  secondSurname: varchar("second_surname", { length: 35 }),
   email: varchar("email", { length: 40 }).notNull().unique(),
   phoneNumber: varchar("phone_number", { length: 8 }),
   account: varchar("account", { length: 11 }).notNull().unique(),
-  userType: int("user_type_id")
+  userType: int("user_type")
     .references(() => userTypes.userTypeId)
     .notNull(),
   reputation: int("reputation")
