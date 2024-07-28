@@ -120,7 +120,7 @@ if(!authorData || authorId === undefined) return;
       handleError(res, error, 'Error updating Author')
     }
   } catch (error) {
-    handleError(res, error, 'Error searching for author to delete')
+    handleError(res, error, 'Error searching for author to update')
   }
 });
 

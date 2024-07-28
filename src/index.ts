@@ -61,3 +61,31 @@ app.listen(port, () => {
 // });
 
 // export { app };
+
+// // Bloque para pruebas CRUD libros
+// import express, { type Application } from "express";
+// import cookieParser from "cookie-parser";
+// import bodyParser from "body-parser";
+// import cors from "cors";
+// import { book } from "./routes/booksTest";
+
+// const port = 8080;
+
+// const app: Application = express();
+
+// const corsOptions = {
+//   origin: '*', 
+//   optionsSuccessStatus: 200,
+// };
+// app.use(cors(corsOptions));
+
+// app.use(bodyParser.json());
+// app.use(cookieParser());
+
+// app.use("/book", book);
+
+// app.listen(port, () => {
+//   console.log(`App running on port ${port}`);
+// });
+
+// export { app };
