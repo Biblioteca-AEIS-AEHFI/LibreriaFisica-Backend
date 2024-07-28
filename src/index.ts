@@ -13,6 +13,7 @@ const app: Application = express();
 const FRONTEND_URL: string = process.env.FRONTEND_URL || 'http://localhost:5173/'
 const corsOptions = {
   origin: FRONTEND_URL,
+  credentials: true,
   optionsSuccessStatus: 200,
 }
 app.use(cors(corsOptions));
