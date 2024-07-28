@@ -25,3 +25,47 @@ Content-Type: application/json
   "userType": 1,
   "reputation": 1
 }
+
+
+### obtener categorias
+GET http://localhost:3000/categorias
+
+### obtener categoria por id
+GET http://localhost:3000/categorias/6
+
+### obtener categoria por nombre
+GET http://localhost:3000/categorias/especialidad/matematicas
+
+### crear categoria
+POST http://localhost:3000/categorias/create
+Content-Type: application/json
+
+{
+  "name": "Fisica"
+}
+
+
+### eliminar categoria por id
+DELETE http://localhost:3000/categorias/5
+
+
+### eliminar categoria por nombre 
+DELETE http://localhost:3000/categorias/categoria/Fisica
+
+### obtener libros por categoria
+GET http://localhost:3000/books/especialidad/matematicas
+
+### crear un libro
+POST http://localhost:3000/books/create
+Content-Type: application/json
+
+{
+  "title": "calculo II",
+  "description": "libro de matematicas, clase calculo II",
+  "edition": 2,
+  "year": 2022,
+  "publisher": "alguien",
+  "language": "esp",
+  "isbn": "isbn",
+  "amount": 10
+}
