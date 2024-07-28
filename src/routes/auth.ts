@@ -69,16 +69,20 @@ authRouter.post("/login", async (req: Request, res: Response) => {
 
     const object = {
       userId: user.numeroCuenta,
-      tipo: user.userType
-    }
+      tipo: user.userType,
+    };
 
     const token = jwt.sign(object, SECRET_KEY, {
       expiresIn: "7d",
     });
 
+    // cambiar sameSite a strict cuando se haga a produccion y agregar secure
     res
       .status(200)
       .cookie("access_token", token, {
+        sameSite: 'strict',
+        httpOnly: true,
+        secure: true,
         maxAge: 7 * 24 * 60 * 60,
       })
       .json(user);
