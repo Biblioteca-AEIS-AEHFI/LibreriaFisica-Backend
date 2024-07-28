@@ -68,7 +68,6 @@ export const users = mysqlTable("users", {
   secondSurname: varchar("second_sur_name", { length: 35 }),
   email: varchar("email", { length: 40 }).notNull().unique(),
   phoneNumber: varchar("phone_number", { length: 8 }).unique(),
-  account: varchar("account", { length: 11 }).notNull().unique(),
   userType: int("user_type_id").references(() => userTypes.userTypeId),
   reputation: int("reputation").references(() => reputations.reputationId),
   password: varchar("password", { length: 60 }).notNull().unique(),

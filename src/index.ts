@@ -5,6 +5,8 @@ import cors from "cors";
 import { userRouter } from "./routes/user";
 import { authRouter } from "./routes/auth";
 import { author } from "./routes/authors";
+import { book } from "./routes/books";
+import { categoryRouter } from "./routes/category";
 import { verifyToken } from "./middleware/auth.middleware";
 
 const port: String | Number = process.env.PORT || 8080;
@@ -14,6 +16,7 @@ const app: Application = express();
 const FRONTEND_URL: string = process.env.FRONTEND_URL || 'http://localhost:5173/'
 const corsOptions = {
   origin: FRONTEND_URL,
+  credentials: true,
   optionsSuccessStatus: 200,
 }
 app.use(cors(corsOptions));
@@ -22,10 +25,11 @@ app.use(bodyParser.json());
 app.use(cookieParser());
 
 app.use("/auth", authRouter);
-
 app.use(verifyToken);
 app.use("/user", userRouter);
 app.use("/author", author);
+app.use('/categorias', categoryRouter)
+app.use('/books', book)
 
 export { app };
 

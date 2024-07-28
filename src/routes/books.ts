@@ -4,11 +4,14 @@ import { z, ZodError } from "zod";
 import { db } from "../db/db";
 import {
   books,
+  categoriesPerBook,
   BookSchema,
   NewBookSchema,
   UpdateBookSchema,
   type Book,
   type NewBook,
+  type CategoryPerBook,
+  categories
 } from "../db/schema";
 
 export const book: Router = Router();
@@ -70,6 +73,22 @@ book.get("/:bookId", async (req: Request, res: Response) => {
     handleError(res, error, "Error searching book");
   }
 });
+
+// obtener libro por nombre de categoria
+
+book.get('/especialidad/:categoria', async (req: Request, res: Response) => {
+  const categoryName: string = req.params.categoria
+  try {
+    const categoryId: number = (await db.select().from(categories).where(eq(categories.name, categoryName)))[0].categoryId
+    const booksIdList: any = await db.select().from(categoriesPerBook).where(eq(categoriesPerBook.categoryId, categoryId))
+    return res.status(200).json({
+      message: 'success',
+      data: booksIdList
+    })
+  } catch(err) {
+    return res.status(500).json({ message: 'error while handling books per categories' })
+  }
+})
 
 // Creando un libro
 book.post("/create", async (req: Request, res: Response) => {
@@ -156,3 +175,4 @@ book.delete("/delete/:bookId", async (req: Request, res: Response) => {
     handleError(res, error, "Error searching for book to delete");
   }
 });
+
