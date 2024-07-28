@@ -182,6 +182,9 @@ export type Author = typeof authors.$inferSelect;
 export const NewAuthorSchema = createInsertSchema(authors);
 export const AuthorSchema = createSelectSchema(authors);
 
+// Crear esquema de actualización parcial para permitir campos opcionales
+export const UpdateAuthorSchema = NewAuthorSchema.partial();
+
 // Autores por Libro
 export const authorsPerBook = mysqlTable(
   "authors_per_book",

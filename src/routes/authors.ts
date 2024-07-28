@@ -6,6 +6,7 @@ import {
   authors,
   AuthorSchema,
   NewAuthorSchema,
+  UpdateAuthorSchema,
   type Author,
   type NewAuthor,
 } from "../db/schema";
@@ -14,7 +15,7 @@ export const author: Router = Router();
 
 // Para validación de ID
 const idAuthorSchema = z.object({
-  authorId: z.number().int(),
+  authorId: z.string().regex(/^\d+$/).transform(Number),
 });
 
 // Manejando errores
@@ -50,7 +51,7 @@ author.get("/", async (req: Request, res: Response) => {
 });
 
 // Obteniendo un autor
-author.get("/:id", async (req: Request, res: Response) => {
+author.get("/:authorId", async (req: Request, res: Response) => {
     const {authorId} = validateSchema(idAuthorSchema, req.params, res) || {}
     if (authorId === undefined) return;
 
@@ -90,8 +91,8 @@ author.post("/create", async (req: Request, res: Response) => {
 });
 
 // Actualizando datos de autor
-author.patch("/update/:id", async (req: Request, res: Response) => {
-    const authorData = validateSchema(AuthorSchema, req.body, res) as Author | null;
+author.patch("/update/:authorId", async (req: Request, res: Response) => {
+    const authorData = validateSchema(UpdateAuthorSchema, req.body, res) as Author | null;
     const {authorId} = validateSchema(idAuthorSchema, req.params, res) || {}
 if(!authorData || authorId === undefined) return;
 
@@ -124,7 +125,7 @@ if(!authorData || authorId === undefined) return;
 });
 
 // Borrando autor
-author.delete("/:id", async (req: Request, res: Response) => {
+author.delete("/delete/:authorId", async (req: Request, res: Response) => {
   const {authorId} = validateSchema(idAuthorSchema, req.params, res) || {}
   if (authorId === undefined) return;
 
