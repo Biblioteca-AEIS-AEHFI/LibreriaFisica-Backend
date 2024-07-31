@@ -1,5 +1,11 @@
-import { relations } from "drizzle-orm";
-import { int, boolean, varchar, mysqlTable } from "drizzle-orm/mysql-core";
+import { relations, sql } from "drizzle-orm";
+import {
+  int,
+  boolean,
+  varchar,
+  mysqlTable,
+  binary,
+} from "drizzle-orm/mysql-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { userTypes } from "./userTypes";
 import { reputations } from "./reputations";
@@ -9,14 +15,16 @@ import { payments } from "./payments";
 
 // Usuarios
 export const users = mysqlTable("users", {
-  userId: int("user_id").primaryKey().autoincrement(),
+  userId: binary("user_id", { length: 16 })
+    .primaryKey()
+    .default(sql`UUID_TO_BIN(UUID())`),
   firstName: varchar("first_name", { length: 35 }).notNull(),
   secondName: varchar("second_name", { length: 35 }),
   firstSurname: varchar("first_surname", { length: 35 }).notNull(),
   secondSurname: varchar("second_surname", { length: 35 }),
   email: varchar("email", { length: 40 }).notNull().unique(),
   phoneNumber: varchar("phone_number", { length: 8 }),
-  account: varchar("account", { length: 11 }).notNull().unique(),
+  accountNumber: varchar("account_number", { length: 11 }).notNull().unique(),
   userType: int("user_type")
     .references(() => userTypes.userTypeId)
     .notNull(),
