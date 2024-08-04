@@ -2,7 +2,7 @@ POST http://localhost:3000/auth/login
 Content-Type: application/json
 
 {
-  "numeroCuenta": "20221001805",
+  "numeroCuenta": "20221001806",
   "password": "password"
 }
 
