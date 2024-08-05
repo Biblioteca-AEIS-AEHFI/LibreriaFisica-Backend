@@ -36,6 +36,125 @@ authRouter.post("/signup", async (req: Request, res: Response) => {
   }
 });
 
+/**
+ *@openapi
+ * /auth/login:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: Login for users
+ *     requestBody:
+ *       required: true
+ *       content:
+ *        application/json:
+ *          schema:
+ *           type: object 
+ *           required: 
+ *            - numeroCuenta
+ *            - password
+ *           properties:
+ *            numeroCuenta:
+ *              type: string
+ *            password:
+ *              type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *         headers:
+ *          access_token:
+ *            description: cookie with session user info
+ *            schema:
+ *              type: object
+ *              required:
+ *                - userId
+ *                - tipo
+ *              properties:
+ *                userId:
+ *                  type: string
+ *                tipo:
+ *                  type: number
+ *              example: { userId: numeroCuenta, tipo: 1}
+ *         content:
+ *           application/json:
+ *             schema:
+ *              $ref: "#/components/schemas/User"
+ *       5XX:
+ *         description: FAILED
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 msg: 
+ *                   type: string
+ *                   example: Error while login 
+ * 
+ *components:
+ *  schemas:
+ *     User:
+ *      type: object
+ *      properties:
+ *        userId:
+ *          type: integer
+ *          description: "Primary key for the user"
+ *          example: 1
+ *        numeroCuenta:
+ *          type: string
+ *          maxLength: 15
+ *          description: "Unique account number"
+ *          example: "123456789012345"
+ *        firstName:
+ *          type: string
+ *          maxLength: 35
+ *          description: "First name of the user"
+ *          example: "John"
+ *        secondName:
+ *          type: string
+ *          maxLength: 35
+ *          description: "Second name of the user"
+ *          example: "Michael"
+ *        firstSurname:
+ *          type: string
+ *          maxLength: 35
+ *          description: "First surname of the user"
+ *          example: "Doe"
+ *        secondSurname:
+ *          type: string
+ *          maxLength: 35
+ *          description: "Second surname of the user"
+ *          example: "Smith"
+ *        email:
+ *          type: string
+ *          maxLength: 40
+ *          description: "Unique email address"
+ *          example: "john.doe@example.com"
+ *        phoneNumber:
+ *          type: string
+ *          maxLength: 8
+ *          description: "Unique phone number"
+ *          example: "12345678"
+ *        userType:
+ *          type: integer
+ *          description: "ID referencing the user type"
+ *          example: 2
+ *        reputation:
+ *          type: integer
+ *          description: "ID referencing the user reputation"
+ *          example: 3
+ *        password:
+ *          type: string
+ *          maxLength: 60
+ *          description: "User's password"
+ *          example: "hashedpassword123"
+ *      required:
+ *        - userId
+ *        - numeroCuenta
+ *        - firstName
+ *        - firstSurname
+ *        - email
+ *        - password
+ */
+
 authRouter.post("/login", async (req: Request, res: Response) => {
   try {
     const result = loginSchema.safeParse(req.body);
@@ -80,13 +199,57 @@ authRouter.post("/login", async (req: Request, res: Response) => {
     res
       .status(200)
       .cookie("access_token", token, {
-        sameSite: 'strict',
+        sameSite: "strict",
         httpOnly: true,
         secure: true,
         maxAge: 7 * 24 * 60 * 60,
       })
       .json(user);
   } catch (error) {
-    return res.status(500).json({ msg: "Error while login", e: error });
+    return res.status(500).json({ msg: "Error while login" });
+  }
+});
+
+/**
+ * 
+ *@openapi
+ * /auth/logout:
+ *  post:
+ *    tags: 
+ *      - Auth
+ *    summary: close session 
+ *    responses:
+ *      200:
+ *        description: OK
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              required:
+ *                - message
+ *              properties:
+ *                message:
+ *                  type: string
+ *      5xx:
+ *        description: FAILED
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              required:
+ *                - message
+ *              properties:
+ *                message:
+ *                  type: string 
+ * 
+ * 
+ */
+authRouter.post("/logout", (req: Request, res: Response) => {
+  try {
+    res.clearCookie("access_token").status(200).json({
+    message: "logout successful",
+    });
+  } catch(err) {
+    res.status(500).json({ message: "Error while logging out" })
   }
 });

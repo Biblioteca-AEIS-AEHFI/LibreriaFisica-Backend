@@ -68,7 +68,6 @@ export const users = mysqlTable("users", {
   secondSurname: varchar("second_sur_name", { length: 35 }),
   email: varchar("email", { length: 40 }).notNull().unique(),
   phoneNumber: varchar("phone_number", { length: 8 }).unique(),
-  account: varchar("account", { length: 11 }).notNull().unique(),
   userType: int("user_type_id").references(() => userTypes.userTypeId),
   reputation: int("reputation").references(() => reputations.reputationId),
   password: varchar("password", { length: 60 }).notNull().unique(),
@@ -112,6 +111,12 @@ export type Book = typeof books.$inferSelect;
 export const NewBookSchema = createInsertSchema(books);
 export const BookSchema = createSelectSchema(books);
 
+// Crear esquema de actualización parcial para permitir campos opcionales
+export const UpdateBookSchema = NewBookSchema.partial();
+
+// Crear esquema de búsqueda parcial para permitir solo enviar algunos campos en la búsqueda
+export const PartialGetBook = BookSchema.partial()
+
 // Categorias
 export const categories = mysqlTable(
   "categories",
@@ -140,6 +145,8 @@ export type Category = typeof categories.$inferSelect;
 
 export const NewCategorySchema = createInsertSchema(categories);
 export const CategorySchema = createSelectSchema(categories);
+
+export const PartialGetCat = CategorySchema.partial()
 
 // Categorias por Libro
 export const categoriesPerBook = mysqlTable(
@@ -181,6 +188,10 @@ export type Author = typeof authors.$inferSelect;
 
 export const NewAuthorSchema = createInsertSchema(authors);
 export const AuthorSchema = createSelectSchema(authors);
+
+// Crear esquema de actualización parcial para permitir campos opcionales
+export const UpdateAuthorSchema = NewAuthorSchema.partial();
+export const PartialGetAuthor = AuthorSchema.partial();
 
 // Autores por Libro
 export const authorsPerBook = mysqlTable(
