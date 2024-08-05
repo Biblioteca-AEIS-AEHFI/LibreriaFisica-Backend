@@ -77,16 +77,102 @@ book.get("/:bookId", async (req: Request, res: Response) => {
 });
 
 // obtener libro por nombre de categoria
-
+/**
+ * @openapi
+ *  /books/especialidad/{nombreCategoria}:
+ *    get:
+ *      tags: 
+ *        - Books
+ *      summary: get books by category name
+ *      parameters:
+ *      - name: nombreCategoria
+ *        in: path
+ *        required: true
+ *        description: nombre de la categoría
+ *      responses:
+ *        200:
+ *          description: OK
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object 
+ *                required:
+ *                  - message
+ *                  - data
+ *                properties:
+ *                  message:
+ *                    type: string
+ *                    example: success
+ *                  data:
+ *                    type: array
+ *                    items:
+ *                      type: object
+ *                      example: { categoryId: 1, bookId: 2 }
+ *        5xx:
+ *          description: FAILED
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                required: 
+ *                  - message
+ *                properties:
+ *                  message:
+ *                    type: string
+ *                    example: error while handling books per categories
+ * 
+ * components:
+ *  schemas:
+ *    Books:
+ *      type: object
+ *      required:
+ *        - bookId
+ *        - title
+ *        - description
+ *        - edition
+ *        - year
+ *        - publisher
+ *        - language
+ *        - isbn 
+ *        - amount
+ *      properties:
+ *        bookId:
+ *          type: number
+ *          example: 1
+ *        title:
+ *          type: string
+ *          example: fisica nuclear
+ *        description:
+ *          type: string
+ *        edition: 
+ *          type: number
+ *          example: 3
+ *        year: 
+ *          type: number
+ *          example: 2007
+ *        publisher:
+ *          type: string
+ *        language: 
+ *          type: string
+ *          example: español
+ *        isbn:
+ *          type: string
+ *          example: 978-0-061-96436-7
+ *        amount:
+ *          type: number
+ *          example: 10
+ */
 book.get("/especialidad/:categoria", async (req: Request, res: Response) => {
   const categoryName: string = req.params.categoria;
   try {
-    const categoryId: number = (
+    const categoryId: any = (
       await db
         .select()
         .from(categories)
         .where(eq(categories.name, categoryName))
-    )[0].categoryId;
+    )[0]?.categoryId;
+    if (!categoryId)
+      return res.status(200).json({ message: "No matching category" });
     const booksIdList: any = await db
       .select()
       .from(categoriesPerBook)
@@ -96,6 +182,7 @@ book.get("/especialidad/:categoria", async (req: Request, res: Response) => {
       data: booksIdList,
     });
   } catch (err) {
+    console.log(err);
     return res
       .status(500)
       .json({ message: "error while handling books per categories" });

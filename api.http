@@ -69,3 +69,7 @@ Content-Type: application/json
   "isbn": "isbn",
   "amount": 10
 }
+
+
+### get books by category name
+GET http://localhost:3000/books/especialidad/matematicas
