@@ -241,6 +241,8 @@ authRouter.post("/login", async (req: Request, res: Response) => {
  *              properties:
  *                message:
  *                  type: string 
+ * 
+ * 
  */
 authRouter.post("/logout", (req: Request, res: Response) => {
   try {
