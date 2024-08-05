@@ -7,6 +7,65 @@ export const categoryRouter: Router = Router()
 
 
 // get categories
+/**
+ *@openapi
+ *  /categorias:
+ *    get:
+ *      tags:
+ *        - Categorias
+ *      summary: obtener todas las categorias existentes en DB
+ *      responses:
+ *        200:
+ *          description: OK
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                required: 
+ *                 - message
+ *                 - data
+ *                properties:
+ *                  message:
+ *                    type: string
+ *                  data:
+ *                    type: array
+ *                    items:
+ *                      type: object 
+ *                      $ref: #/components/schemas/Categories
+ *                      example: {name: matematicas discretas, categoryId: 4, parentCategoryId: 1}
+ *        5xx:
+ *          description: FAILED
+ *          content:
+ *           application/json:
+ *              schema:
+ *                type: object
+ *                required:
+ *                  - message 
+ *                properties:
+ *                  message: 
+ *                    type: string
+ *                    example: error while handling categories
+ * 
+ * components:
+ *   schemas:
+ *    Categories:
+ *      type: object
+ *      required:
+ *        - name
+ *        - categoryId
+ *        - parentCategoryId
+ *      properties:
+ *        name:
+ *          type: string
+ *          example: matematicas
+ *        categoryId:
+ *          type: number
+ *          example: 4
+ *        parentCategoryId:
+ *          type: number
+ *          example: 1 
+ *  
+ */
 categoryRouter.get('/', async (req: Request, res: Response) => {
   try {
     const categoriesList: Array<Category> = await db.select().from(categories);
@@ -20,6 +79,50 @@ categoryRouter.get('/', async (req: Request, res: Response) => {
 })
 
 // get category by id
+/**
+ * @openapi
+ *  '/categories/{id}':
+ *    get:
+ *      tags:
+ *        - Categorias
+ *      summary: get category by id
+ *      parameters:
+ *      - name: id
+ *        in: path
+ *        description: category id
+ *        required: true
+ *      responses:
+ *        200:
+ *          description: OK
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                required:
+ *                  - message
+ *                  - data
+ *                properties:
+ *                  message: 
+ *                    type: string
+ *                    example: category found successfully
+ *                  data:
+ *                    type: object
+ *                    example: { name: matematicas discretas, categoryId: 4, parentCategoryId: 1 }
+ * 
+ *        5xx:
+ *          description: FAILED
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                required: 
+ *                  - message
+ *                properties:
+ *                  message:
+ *                    type: string
+ *                    example: error while handling categories with id
+ *                
+ */
 categoryRouter.get('/:id', async (req: Request, res: Response) => {
   const numberRegex = /^\d+$/;
   const id: string = req.params.id
@@ -38,6 +141,50 @@ categoryRouter.get('/:id', async (req: Request, res: Response) => {
 })
 
 // get category by name
+/**
+ * @openapi
+ *  '/categories/especialidad/{name}':
+ *    get:
+ *      tags:
+ *        - Categorias
+ *      summary: get category by name
+ *      parameters:
+ *      - name: name
+ *        in: path
+ *        description: category name
+ *        required: true
+ *      responses:
+ *        200:
+ *          description: OK
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                required:
+ *                  - message
+ *                  - data
+ *                properties:
+ *                  message: 
+ *                    type: string
+ *                    example: category found successfully
+ *                  data:
+ *                    type: object
+ *                    example: { name: matematicas discretas, categoryId: 4, parentCategoryId: 1 }
+ * 
+ *        5xx:
+ *          description: FAILED
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                required: 
+ *                  - message
+ *                properties:
+ *                  message:
+ *                    type: string
+ *                    example: error while handling categories with id
+ *                
+ */
 categoryRouter.get('/especialidad/:name', async (req: Request, res: Response) => {
   const categoryName: string = req.params.name
   try {
@@ -55,7 +202,64 @@ categoryRouter.get('/especialidad/:name', async (req: Request, res: Response) =>
 })
 
 // create a category
-
+/**
+ * @openapi
+ *  /categories/create:
+ *  post:
+ *    tags: 
+ *      - Categorias
+ *    summary: create new category
+ *    requestBody: 
+ *      required: true
+ *      content:
+ *        application/json:
+ *          schema:
+ *            type: object
+ *            required:
+ *              - name
+ *              - categoryId
+ *              - parentCategoryId
+ *            properties:
+ *              name:
+ *                type: string
+ *                example: ecuaciones diferenciales
+ *              categoryId:
+ *                type: number
+ *                example: 6
+ *              parentCategoryId:
+ *                type: number
+ *                example: 1
+ *    responses:
+ *      200:
+ *        description: OK
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              required:
+ *                - message
+ *                - data
+ *              properties:
+ *                message: 
+ *                  type: string
+ *                  example: category created successfully
+ *                data:
+ *                  type: object
+ *                  example: { name: ecuaciones diferenciales, categoryId: 6, parentCategoryId: 1 }
+ * 
+ *      5xx:
+ *        description: FAILED
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              required:
+ *                - message
+ *              properties:
+ *                message:
+ *                  type: string
+ *                  example: error while handling category
+ */
 categoryRouter.post('/create', async (req: Request, res: Response) => {
   try {
     const validCategory: boolean = (NewCategorySchema.safeParse(req.body)).success 
@@ -75,6 +279,50 @@ categoryRouter.post('/create', async (req: Request, res: Response) => {
 })
 
 // delete a category by id
+/**
+ * @openapi
+ *  '/categories/{id}':
+ *    delete:
+ *      tags:
+ *        - Categorias
+ *      summary: delete category by id 
+ *      parameters:
+ *      - name: id
+ *        in: path
+ *        description: category id
+ *        required: true
+ *      responses:
+ *        200:
+ *          description: OK
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                required:
+ *                  - message
+ *                  - data
+ *                properties:
+ *                  message: 
+ *                    type: string
+ *                    example: category deleted successfully
+ *                  data:
+ *                    type: object
+ *                    example: { name: matematicas discretas, categoryId: 4, parentCategoryId: 1 }
+ * 
+ *        5xx:
+ *          description: FAILED
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                required: 
+ *                  - message
+ *                properties:
+ *                  message:
+ *                    type: string
+ *                    example: error while trying to delete category
+ *                
+ */
 categoryRouter.delete('/:id', async (req: Request, res: Response) => {
   const numberRegex = /^\d+$/;
   const id: string = req.params.id
@@ -96,14 +344,60 @@ categoryRouter.delete('/:id', async (req: Request, res: Response) => {
 })
 
 // delete category by name
+/**
+ * @openapi
+ *  '/categories/especialidad/{name}':
+ *    delete:
+ *      tags:
+ *        - Categorias
+ *      summary: delete category by name
+ *      parameters:
+ *      - name: name
+ *        in: path
+ *        description: category name
+ *        required: true
+ *      responses:
+ *        200:
+ *          description: OK
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                required:
+ *                  - message
+ *                  - data
+ *                properties:
+ *                  message: 
+ *                    type: string
+ *                    example: category deleted successfully
+ *                  data:
+ *                    type: object
+ *                    example: { name: matematicas discretas, categoryId: 4, parentCategoryId: 1 }
+ * 
+ *        5xx:
+ *          description: FAILED
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                required: 
+ *                  - message
+ *                properties:
+ *                  message:
+ *                    type: string
+ *                    example: error while deleting category 
+ *                
+ */
 categoryRouter.delete('/categoria/:name', async (req: Request, res: Response) => {
   const name: string = req.params.name
   try {
     const categoryToDelete: Category = (await db.select().from(categories).where(eq(categories.name, name)))[0]
     if (!categoryToDelete) return res.status(400).json({ message: 'invalid paramaters' })
-
     await db.delete(categories).where(eq(categories.name, name))
-    return res.status(200).json({ message: 'category deleted successfully' })
+    return res.status(200).json({ 
+      message: 'category deleted successfully',
+      data: categoryToDelete
+     })
   } catch(err) {
     return res.status(500).json({ message: 'error while deleting category' })
   }
