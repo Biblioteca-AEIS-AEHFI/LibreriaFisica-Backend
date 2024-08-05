@@ -1,11 +1,12 @@
 import { Router, type Request, type Response } from "express";
-import { eq } from "drizzle-orm";
+import { eq, or } from "drizzle-orm";
 import { z, ZodError } from "zod";
 import { db } from "../db/db";
 import {
   authors,
   AuthorSchema,
   NewAuthorSchema,
+  PartialGetAuthor,
   UpdateAuthorSchema,
   type Author,
   type NewAuthor,
@@ -72,6 +73,34 @@ author.get("/:authorId", async (req: Request, res: Response) => {
   } catch (error) {
     handleError(res, error, 'Error searching author')
   }
+});
+
+// Obteniendo autor por nombre
+author.get("/:authorName", async (req: Request, res: Response) => {
+  let {authorName} = validateSchema(PartialGetAuthor, req.params, res) || {}
+  authorName = authorName.trim()
+  
+  if (authorName === undefined) return;
+
+try {
+  const author = await db
+    .select()
+    .from(authors)
+    .where(or(
+      eq(authors.firstName, authorName), eq(authors.lastName, authorName)
+    ));
+
+  if (author.length === 0) {
+    return res.status(404).json({ message: "Author not found" });
+  }
+
+  res.status(200).json({
+    message: "Author fetched successfully",
+    data: author[0],
+  });
+} catch (error) {
+  handleError(res, error, 'Error searching author')
+}
 });
 
 // Creando un autor

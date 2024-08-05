@@ -114,6 +114,9 @@ export const BookSchema = createSelectSchema(books);
 // Crear esquema de actualización parcial para permitir campos opcionales
 export const UpdateBookSchema = NewBookSchema.partial();
 
+// Crear esquema de búsqueda parcial para permitir solo enviar algunos campos en la búsqueda
+export const PartialGetBook = BookSchema.partial()
+
 // Categorias
 export const categories = mysqlTable(
   "categories",
@@ -142,6 +145,8 @@ export type Category = typeof categories.$inferSelect;
 
 export const NewCategorySchema = createInsertSchema(categories);
 export const CategorySchema = createSelectSchema(categories);
+
+export const PartialGetCat = CategorySchema.partial()
 
 // Categorias por Libro
 export const categoriesPerBook = mysqlTable(
@@ -186,6 +191,7 @@ export const AuthorSchema = createSelectSchema(authors);
 
 // Crear esquema de actualización parcial para permitir campos opcionales
 export const UpdateAuthorSchema = NewAuthorSchema.partial();
+export const PartialGetAuthor = AuthorSchema.partial();
 
 // Autores por Libro
 export const authorsPerBook = mysqlTable(
