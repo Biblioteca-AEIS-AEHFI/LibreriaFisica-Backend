@@ -14,6 +14,7 @@ import {
   categories,
   PartialGetCat,
   PartialGetBook,
+  authorsPerBook,
 } from "../db/schema";
 
 export const book: Router = Router();
@@ -192,10 +193,18 @@ book.get("/especialidad/:categoria", async (req: Request, res: Response) => {
 // Creando un libro
 book.post("/create", async (req: Request, res: Response) => {
   const bookData = validateSchema(NewBookSchema, req.body, res) as any | null;
-  if (!bookData) return;
+  if (!bookData) return res.status(400).json({ message: 'data does not match' });
 
   try {
-    const result = await db.insert(books).values(bookData);
+    const authors: Array<number> = req.body.authors
+    const categories: Array<number> = req.body.categories
+    const resultId: number = (await db.insert(books).values(bookData).$returningId())[0].bookId;
+    const max = Math.max(authors.length, categories.length)
+    for (let i = 0; i < max; i++) {
+      if (categories.length > i) await db.insert(categoriesPerBook).values({categoryId: categories[i], bookId: resultId})
+      if (authors.length > i) await db.insert(authorsPerBook).values({authorId: authors[i], bookId: resultId})
+    }
+    const result = await db.select().from(books).where(eq(books.bookId, resultId))
     return res.status(201).json({
       message: "Book created successfully",
       data: result,
