@@ -60,14 +60,16 @@ POST http://localhost:3000/books/create
 Content-Type: application/json
 
 {
-  "title": "calculo II",
+  "title": "ecuaciones diferenciales parciales",
   "description": "libro de matematicas, clase calculo II",
-  "edition": 2,
-  "year": 2022,
-  "publisher": "alguien",
+  "edition": 7,
+  "year": 2017,
+  "publisher": "someone",
   "language": "esp",
-  "isbn": "isbn",
-  "amount": 10
+  "isbn": "isbn2",
+  "amount": 10,
+  "authors": [1,2,3],
+  "categories": [1,2,3]
 }
 
 
