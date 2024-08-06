@@ -15,6 +15,9 @@ import {
   PartialGetCat,
   PartialGetBook,
   authorsPerBook,
+  type Category,
+  type Author,
+  authors,
 } from "../db/schema";
 
 export const book: Router = Router();
@@ -191,18 +194,122 @@ book.get("/especialidad/:categoria", async (req: Request, res: Response) => {
 });
 
 // Creando un libro
+/**
+ * @openapi
+ *  /books/create:
+ *    post:
+ *      tags:
+ *        - Books
+ *      summary: create books
+ *      requestBody:
+ *        content:
+ *          application/json:
+ *            schema: 
+ *              type: object
+ *              $ref: #/components/schemas/BooksRequest
+ *              example: { "title": "Fisica para ingeniería", "description": "some description", "edition": 10, "year": 2017, "publisher": "publisher", "language": "esp", "isbn": "isbn3", "amount": 15 , "authors": [1,2,3], "categories": [1,2,3] }
+ *      responses: 
+ *        200:
+ *          description: OK
+ *          content:  
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                required:
+ *                  - message
+ *                  - data
+ *                properties:
+ *                  message:
+ *                    type: string
+ *                    example: book created successfully
+ *                  data:
+ *                    type: object
+ *                    $ref: #/components/schemas/Books
+ *                    example:  { "title": "Fisica para ingeniería", "description": "some description", "edition": 10, "year": 2017, "publisher": "publisher", "language": "esp", "isbn": "isbn3", "amount": 15 }
+ *        5xx:
+ *          description: FAILED
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                required: 
+ *                  - message
+ *                properties:
+ *                  message:
+ *                    type: string
+ *                    example: error creating book 
+ *
+ * 
+ * components:
+ *  schemas:
+ *    BooksRequest:
+ *      type: object
+ *      required:
+ *        - bookId
+ *        - title
+ *        - description
+ *        - edition
+ *        - year
+ *        - publisher
+ *        - language
+ *        - isbn 
+ *        - amount
+ *        - authors
+ *        - categories
+ *      properties:
+ *        bookId:
+ *          type: number
+ *          example: 1
+ *        title:
+ *          type: string
+ *          example: fisica nuclear
+ *        description:
+ *          type: string
+ *        edition: 
+ *          type: number
+ *          example: 3
+ *        year: 
+ *          type: number
+ *          example: 2007
+ *        publisher:
+ *          type: string
+ *        language: 
+ *          type: string
+ *          example: español
+ *        isbn:
+ *          type: string
+ *          example: 978-0-061-96436-7
+ *        amount:
+ *          type: number
+ *          example: 10
+ *        authors:
+ *          type: array
+ *          items:
+ *            type: number
+ *            example: [1,2,3]
+ *        categories:
+ *          type: array
+ *          items:
+ *            type: number
+ *            example: [1,2,3]
+ */
 book.post("/create", async (req: Request, res: Response) => {
   const bookData = validateSchema(NewBookSchema, req.body, res) as any | null;
   if (!bookData) return res.status(400).json({ message: 'data does not match' });
 
   try {
-    const authors: Array<number> = req.body.authors
-    const categories: Array<number> = req.body.categories
+    const authorsList: Array<number> = req.body.authors
+    const categoriesList: Array<number> = req.body.categories
     const resultId: number = (await db.insert(books).values(bookData).$returningId())[0].bookId;
-    const max = Math.max(authors.length, categories.length)
+    const max = Math.max(authorsList.length, categoriesList.length)
     for (let i = 0; i < max; i++) {
-      if (categories.length > i) await db.insert(categoriesPerBook).values({categoryId: categories[i], bookId: resultId})
-      if (authors.length > i) await db.insert(authorsPerBook).values({authorId: authors[i], bookId: resultId})
+      const category: Category = (await db.select().from(categories).where(eq(categories.categoryId, categoriesList[i])))[0]
+      if (categoriesList.length > i && category) {
+        if (category)
+          await db.insert(categoriesPerBook).values({categoryId: categoriesList[i], bookId: resultId})
+      } 
+      const author: Author = (await db.select().from(authors).where(eq(authors.authorId, authorsList[i])))[0]
+      if (authorsList.length > i && author) await db.insert(authorsPerBook).values({authorId: authorsList[i], bookId: resultId})
     }
     const result = await db.select().from(books).where(eq(books.bookId, resultId))
     return res.status(201).json({
