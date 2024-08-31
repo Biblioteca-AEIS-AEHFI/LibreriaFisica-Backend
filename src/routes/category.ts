@@ -2,6 +2,8 @@ import { Router, type Request, type Response } from 'express'
 import { type Category, type NewCategory, categories, CategorySchema, NewCategorySchema } from '../db/schema'
 import { db } from '../db/db'
 import { eq } from 'drizzle-orm'
+import { saveChildren } from '../utils/categories'
+import type { categoryFormat } from '../utils/definitions'
 
 export const categoryRouter: Router = Router()
 
@@ -77,6 +79,106 @@ categoryRouter.get('/', async (req: Request, res: Response) => {
     return res.status(500).json({ message: 'error while handling categories' })
   }
 })
+
+// ------------------------------------------------------------------------------------------------------
+// begin of endpoints requested for frontend
+// ------------------------------------------------------------------------------------------------------
+
+
+/**
+ *@openapi
+ *  /categorias/all:
+ *    get:
+ *      tags:
+ *        - Categorias
+ *      summary: obtener todas las categorias existentes en DB por orden jerarquico. Solo obtiene las categorias de primer orde y recursivamente obtienen las categorias de forma jerarquica.
+ *      responses:
+ *        200:
+ *          description: OK
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                required: 
+ *                 - message
+ *                 - data
+ *                properties:
+ *                  message:
+ *                    type: string
+ *                  data:
+ *                    type: array
+ *                    items:
+ *                      type: object 
+ *                      $ref: #/components/schemas/Categories
+ *                      example: {category_id: 1, name: matematicas, children: [{category_id: 2, name: matematicas discretas, children: []}]}
+ *        5xx:
+ *          description: FAILED
+ *          content:
+ *           application/json:
+ *              schema:
+ *                type: object
+ *                required:
+ *                  - message 
+ *                properties:
+ *                  message: 
+ *                    type: string
+ *                    example: error while handling categories
+ * 
+ * components:
+ *   schemas:
+ *    Categories:
+ *      type: object
+ *      required:
+ *        - name
+ *        - categoryId
+ *        - parentCategoryId
+ *      properties:
+ *        name:
+ *          type: string
+ *          example: matematicas
+ *        categoryId:
+ *          type: number
+ *          example: 4
+ *        parentCategoryId:
+ *          type: number
+ *          example: 1 
+ *  
+ */
+categoryRouter.get('/all', async (req: Request, res: Response) => {
+  try {
+    const categoriesList: Array<Category> = await db.select().from(categories).orderBy(categories.categoryId);
+    const result = [];
+    // it gets every element/category in list/database
+    for (let i = 0; i < categoriesList.length; i++) {
+      // will return just parent (first order) categories
+      if (categoriesList[i].parentCategoryId != null) continue
+
+      const obj: categoryFormat = {
+        category_id: categoriesList[i].categoryId,
+        name: categoriesList[i].name,
+        children: saveChildren(categoriesList, categoriesList[i].categoryId)
+      }  
+
+      result.push(obj)
+    }
+    res.status(200).json({
+      message: 'categories handled successfully',
+      data: result
+    })
+  } catch(e) {
+    return { message: 'error while getting categories' }
+  }
+})
+
+categoryRouter.get('/update/:id', async (req: Request, res: Response) => {
+  
+})
+
+// ------------------------------------------------------------------------------------------------------
+// end of endpoints requested for frontend
+// ------------------------------------------------------------------------------------------------------
+
+
 
 // get category by id
 /**
@@ -402,3 +504,4 @@ categoryRouter.delete('/categoria/:name', async (req: Request, res: Response) =>
     return res.status(500).json({ message: 'error while deleting category' })
   }
 })
+
