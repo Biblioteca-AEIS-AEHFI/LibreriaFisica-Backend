@@ -9,6 +9,7 @@ import {
   date,
   float,
   foreignKey,
+  boolean,
 } from "drizzle-orm/mysql-core";
 
 // TABLES:
@@ -92,10 +93,13 @@ export const books = mysqlTable("books", {
   description: text("description"),
   edition: int("edition"),
   year: int("year"),
-  publisher: varchar("publisher", { length: 30 }),
+  publisher: varchar("publisher", { length: 45 }),
   language: varchar("language", { length: 15 }),
+  location: varchar('location', {length: 50}),
   isbn: varchar("isbn", { length: 13 }).unique().notNull(),
   amount: int("amount"),
+  enabled: boolean('enabled'),
+  entryDate: date('entry_date')
 });
 
 export const booksRelations = relations(books, ({ many }) => ({
@@ -117,6 +121,26 @@ export const UpdateBookSchema = NewBookSchema.partial();
 // Crear esquema de búsqueda parcial para permitir solo enviar algunos campos en la búsqueda
 export const PartialGetBook = BookSchema.partial()
 
+// ejemplares
+export const copies = mysqlTable(
+  "copies",
+  {
+    copyId: int("copy_id").primaryKey().autoincrement(),
+    condition: varchar('condition', { length: 150 }),
+    state: boolean('state'),
+    bookId: int('book_id').references(() => books.bookId)
+  },
+  (table) => {
+    return {
+      parentReference: foreignKey({
+        columns: [table.bookId],
+        foreignColumns: [table.copyId],
+        name: "copy_id_fkey"
+      })
+    }
+  }
+)
+
 // Categorias
 export const categories = mysqlTable(
   "categories",
@@ -124,6 +148,8 @@ export const categories = mysqlTable(
     categoryId: int("category_id").primaryKey().autoincrement(),
     parentCategoryId: int("parent_category_id"),
     name: varchar("name", { length: 30 }),
+    icon: varchar('icon', { length: 100 }),
+    enabled: boolean('enabled')
   },
   (table) => {
     return {
@@ -228,10 +254,9 @@ export const AuthorPerBookSchema = createInsertSchema(authorsPerBook);
 // Reservas
 export const reserves = mysqlTable("reserves", {
   reserveId: int("reserve_id").primaryKey().autoincrement(),
-  bookId: int("book_id").references(() => books.bookId),
+  copyId: int("copy_id").references(() => copies.copyId),
   userId: int("user_id").references(() => users.userId),
   createdAt: date("created_at"),
-  returnedOn: date("returned_on"),
   status: varchar("status", { length: 20 }),
   notes: text("notes"),
 });
@@ -258,14 +283,15 @@ export const NewPaymentSchema = createInsertSchema(payments);
 export const PaymentSchema = createSelectSchema(payments);
 
 // Historial de Prestamos
+// TODO: el estado/state deberia ser un enum.
 export const loans = mysqlTable("loans", {
   loanId: int("loan_id").primaryKey().autoincrement(),
-  bookId: int("book_id").references(() => books.bookId),
-  userId: int("user_id").references(() => users.userId),
+  reserveId: int("reserve_id").references(() => reserves.reserveId),
   adminId: int("admin_id").references(() => users.userId),
   loanedAt: date("loaned_at"),
   expiresOn: date("expires_on"),
   notes: text("notes"),
+  state: varchar('state', { length: 50 }),
 });
 
 export type NewLoan = typeof loans.$inferInsert;
@@ -273,3 +299,7 @@ export type Loan = typeof loans.$inferSelect;
 
 export const NewLoanSchema = createInsertSchema(loans);
 export const LoanSchema = createSelectSchema(loans);
+
+export const loansRelations = relations(loans, ({ one }) => ({
+  reserves: one(reserves),
+}));

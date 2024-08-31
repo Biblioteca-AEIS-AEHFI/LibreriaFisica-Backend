@@ -75,3 +75,6 @@ Content-Type: application/json
 
 ### get books by category name
 GET http://localhost:3000/books/especialidad/matematicas
+
+### get categories hierarchically
+GET http://localhost:3000/categorias/all

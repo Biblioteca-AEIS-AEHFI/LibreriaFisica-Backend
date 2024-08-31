@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "7f58999f-f194-4742-98b4-4e878070500b",
+  "id": "e05da2b7-2dba-474b-8aea-314b1a5088f1",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "authors": {
@@ -146,7 +146,7 @@
         },
         "publisher": {
           "name": "publisher",
-          "type": "varchar(30)",
+          "type": "varchar(45)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -154,6 +154,13 @@
         "language": {
           "name": "language",
           "type": "varchar(15)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "location": {
+          "name": "location",
+          "type": "varchar(50)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -168,6 +175,20 @@
         "amount": {
           "name": "amount",
           "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "enabled": {
+          "name": "enabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "entry_date": {
+          "name": "entry_date",
+          "type": "date",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -212,6 +233,20 @@
         "name": {
           "name": "name",
           "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "icon": {
+          "name": "icon",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "enabled": {
+          "name": "enabled",
+          "type": "boolean",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -308,6 +343,77 @@
       },
       "uniqueConstraints": {}
     },
+    "copies": {
+      "name": "copies",
+      "columns": {
+        "copy_id": {
+          "name": "copy_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "condition": {
+          "name": "condition",
+          "type": "varchar(150)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "state": {
+          "name": "state",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "book_id": {
+          "name": "book_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "copies_book_id_books_book_id_fk": {
+          "name": "copies_book_id_books_book_id_fk",
+          "tableFrom": "copies",
+          "tableTo": "books",
+          "columnsFrom": [
+            "book_id"
+          ],
+          "columnsTo": [
+            "book_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "copy_id_fkey": {
+          "name": "copy_id_fkey",
+          "tableFrom": "copies",
+          "tableTo": "copies",
+          "columnsFrom": [
+            "book_id"
+          ],
+          "columnsTo": [
+            "copy_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "copies_copy_id": {
+          "name": "copies_copy_id",
+          "columns": [
+            "copy_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {}
+    },
     "loans": {
       "name": "loans",
       "columns": {
@@ -318,15 +424,8 @@
           "notNull": true,
           "autoincrement": true
         },
-        "book_id": {
-          "name": "book_id",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "user_id": {
-          "name": "user_id",
+        "reserve_id": {
+          "name": "reserve_id",
           "type": "int",
           "primaryKey": false,
           "notNull": false,
@@ -359,32 +458,26 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
+        },
+        "state": {
+          "name": "state",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "loans_book_id_books_book_id_fk": {
-          "name": "loans_book_id_books_book_id_fk",
+        "loans_reserve_id_reserves_reserve_id_fk": {
+          "name": "loans_reserve_id_reserves_reserve_id_fk",
           "tableFrom": "loans",
-          "tableTo": "books",
+          "tableTo": "reserves",
           "columnsFrom": [
-            "book_id"
+            "reserve_id"
           ],
           "columnsTo": [
-            "book_id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "loans_user_id_users_user_id_fk": {
-          "name": "loans_user_id_users_user_id_fk",
-          "tableFrom": "loans",
-          "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "user_id"
+            "reserve_id"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -531,8 +624,8 @@
           "notNull": true,
           "autoincrement": true
         },
-        "book_id": {
-          "name": "book_id",
+        "copy_id": {
+          "name": "copy_id",
           "type": "int",
           "primaryKey": false,
           "notNull": false,
@@ -547,13 +640,6 @@
         },
         "created_at": {
           "name": "created_at",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "returned_on": {
-          "name": "returned_on",
           "type": "date",
           "primaryKey": false,
           "notNull": false,
@@ -576,15 +662,15 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "reserves_book_id_books_book_id_fk": {
-          "name": "reserves_book_id_books_book_id_fk",
+        "reserves_copy_id_copies_copy_id_fk": {
+          "name": "reserves_copy_id_copies_copy_id_fk",
           "tableFrom": "reserves",
-          "tableTo": "books",
+          "tableTo": "copies",
           "columnsFrom": [
-            "book_id"
+            "copy_id"
           ],
           "columnsTo": [
-            "book_id"
+            "copy_id"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -702,13 +788,6 @@
           "notNull": false,
           "autoincrement": false
         },
-        "account": {
-          "name": "account",
-          "type": "varchar(11)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
         "user_type_id": {
           "name": "user_type_id",
           "type": "int",
@@ -785,12 +864,6 @@
           "name": "users_phone_number_unique",
           "columns": [
             "phone_number"
-          ]
-        },
-        "users_account_unique": {
-          "name": "users_account_unique",
-          "columns": [
-            "account"
           ]
         },
         "users_password_unique": {
