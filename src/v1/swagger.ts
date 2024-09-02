@@ -1,4 +1,4 @@
-import {type Router, type Request, type Response } from 'express'
+import { type Router, type Request, type Response } from "express";
 import * as swaggerUi from "swagger-ui-express";
 
 const swaggerJSDoc = require("swagger-jsdoc");
@@ -9,11 +9,20 @@ const options = {
     openapi: "3.0.0",
     info: { title: "Libreria API Proyecto Asociación", version: "1.0.0" },
   },
-  apis: ["./src/routes/auth.ts", "./src/routes/authors.ts", "./src/routes/books.ts", "./src/routes/category.ts", "./src/routes/deleteUser.ts", "./src/routes/user.ts"],
+  apis: [
+    "./src/routes/search.ts",
+    "./src/routes/loans.ts",
+    "./src/routes/auth.ts",
+    "./src/routes/authors.ts",
+    "./src/routes/books.ts",
+    "./src/routes/category.ts",
+    "./src/routes/deleteUser.ts",
+    "./src/routes/user.ts",
+  ],
 };
 
 // Docs in JSON format
-const swaggerSpec = swaggerJSDoc(options);
+export const swaggerSpec = swaggerJSDoc(options);
 
 // Function to setup our docs
 export const swaggerDocs = (app: Router, port: string | number) => {
