@@ -8,7 +8,7 @@ import {
   categoriesPerBook,
 } from "../db/schema";
 import { db } from "../db/db";
-import { eq, or } from "drizzle-orm";
+import { eq, or, and } from "drizzle-orm";
 import { saveChildren } from "../utils/categories";
 import type { categoryFormat } from "../utils/definitions";
 
@@ -209,10 +209,10 @@ categoryRouter.get("/all", async (req: Request, res: Response) => {
 
 categoryRouter.delete("/delete/:id", async (req: Request, res: Response) => {
   const categoryId = Number(req.params.id);
-  const token = req.cookies?.access_token;
+  //const token = req.cookies?.access_token;
   try {
-    if (token?.tipo != 1)
-      return res.status(401).json({ message: "access denied" });
+    //if (token?.tipo != 1)
+    // return res.status(401).json({ message: "access denied" });
     const booksWithCategoryToDelete = await db
       .select()
       .from(categoriesPerBook)
@@ -331,10 +331,10 @@ categoryRouter.delete("/delete/:id", async (req: Request, res: Response) => {
  */
 
 categoryRouter.put("/update", async (req: Request, res: Response) => {
-  const token = req.cookies?.access_token;
+  //const token = req.cookies?.access_token;
   try {
-    if (token?.tipo != 1)
-      return res.status(401).json({ message: "access denied" });
+    //if (token?.tipo != 1)
+    //  return res.status(401).json({ message: "access denied" });
     const categoryObj = req.body;
     const validCategory: boolean =
       NewCategorySchema.safeParse(categoryObj).success;
@@ -350,7 +350,7 @@ categoryRouter.put("/update", async (req: Request, res: Response) => {
         icon: categoryObj.icon,
         parentCategoryId: categoryObj.parentCategoryId,
       })
-      .where(eq(categories.categoryId, categoryObj.categoryId));
+      .where(and(eq(categories.categoryId, categoryObj.categoryId), eq(categories.enabled, true)));
     const categoryUpdated: Category = (
       await db
         .select()
