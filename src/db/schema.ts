@@ -288,8 +288,8 @@ export const loans = mysqlTable("loans", {
   loanId: int("loan_id").primaryKey().autoincrement(),
   reserveId: int("reserve_id").references(() => reserves.reserveId),
   adminId: int("admin_id").references(() => users.userId),
-  loanedAt: date("loaned_at"),
-  expiresOn: date("expires_on"),
+  loanedAt: date("loaned_at").notNull(),
+  expiresOn: date("expires_on").notNull(),
   notes: text("notes"),
   state: varchar('state', { length: 50 }),
 });

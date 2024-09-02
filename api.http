@@ -78,3 +78,9 @@ GET http://localhost:3000/books/especialidad/matematicas
 
 ### get categories hierarchically
 GET http://localhost:3000/categorias/all
+
+### deletes a category and all its children
+DELETE http://localhost:3000/categorias/delete/1
+
+### get books by key 
+GET http://localhost:3000/search?query=el
