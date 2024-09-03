@@ -41,7 +41,9 @@ POST http://localhost:3000/categorias/create
 Content-Type: application/json
 
 {
-  "name": "Fisica"
+  "name": "Fisica de particulas",
+  "parentCategoryId": 1,
+  "icon": "prueba2.svg"
 }
 
 
