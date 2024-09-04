@@ -8,9 +8,9 @@ import {
   categoriesPerBook,
 } from "../db/schema";
 import { db } from "../db/db";
-import { eq, or } from "drizzle-orm";
+import { eq, or, and } from "drizzle-orm";
 import { saveChildren } from "../utils/categories";
-import type { categoryFormat } from "../utils/definitions";
+import { categorySchema, type categoryFormat } from "../utils/definitions";
 
 export const categoryRouter: Router = Router();
 
@@ -144,6 +144,7 @@ categoryRouter.get("/all", async (req: Request, res: Response) => {
       const obj: categoryFormat = {
         category_id: categoriesList[i].categoryId,
         name: categoriesList[i].name,
+        icon: categoriesList[i].icon,
         children: saveChildren(categoriesList, categoriesList[i].categoryId),
       };
 
@@ -209,10 +210,10 @@ categoryRouter.get("/all", async (req: Request, res: Response) => {
 
 categoryRouter.delete("/delete/:id", async (req: Request, res: Response) => {
   const categoryId = Number(req.params.id);
-  const token = req.cookies?.access_token;
+  //const token = req.cookies?.access_token;
   try {
-    if (token?.tipo != 1)
-      return res.status(401).json({ message: "access denied" });
+    //if (token?.tipo != 1)
+    // return res.status(401).json({ message: "access denied" });
     const booksWithCategoryToDelete = await db
       .select()
       .from(categoriesPerBook)
@@ -331,10 +332,10 @@ categoryRouter.delete("/delete/:id", async (req: Request, res: Response) => {
  */
 
 categoryRouter.put("/update", async (req: Request, res: Response) => {
-  const token = req.cookies?.access_token;
+  //const token = req.cookies?.access_token;
   try {
-    if (token?.tipo != 1)
-      return res.status(401).json({ message: "access denied" });
+    //if (token?.tipo != 1)
+    //  return res.status(401).json({ message: "access denied" });
     const categoryObj = req.body;
     const validCategory: boolean =
       NewCategorySchema.safeParse(categoryObj).success;
@@ -350,7 +351,7 @@ categoryRouter.put("/update", async (req: Request, res: Response) => {
         icon: categoryObj.icon,
         parentCategoryId: categoryObj.parentCategoryId,
       })
-      .where(eq(categories.categoryId, categoryObj.categoryId));
+      .where(and(eq(categories.categoryId, categoryObj.categoryId), eq(categories.enabled, true)));
     const categoryUpdated: Category = (
       await db
         .select()
@@ -535,18 +536,19 @@ categoryRouter.get(
  *              type: object
  *              required:
  *                - name
- *                - categoryId
  *                - parentCategoryId
+ *                - icon
  *              properties:
  *                name:
  *                  type: string
  *                  example: ecuaciones diferenciales
- *                categoryId:
- *                  type: number
- *                  example: 6
  *                parentCategoryId:
  *                  type: number
  *                  example: 1
+ *                icon:
+ *                  type: string
+ *                  example: ecuacionesDiferenciales.svg
+ * 
  *       responses:
  *        200:
  *          description: OK
@@ -563,7 +565,8 @@ categoryRouter.get(
  *                    example: category created successfully
  *                  data:
  *                    type: object
- *                    example: { name: ecuaciones diferenciales, categoryId: 6, parentCategoryId: 1 }
+ *                    example: { name: ecuaciones diferenciales, categoryId: 6, parentCategoryId: 1, icon: ecuacionesDiferenciales.svg, enabled: true }
+ * 
  *
  *        5xx:
  *          description: FAILED
@@ -580,7 +583,7 @@ categoryRouter.get(
  */
 categoryRouter.post("/create", async (req: Request, res: Response) => {
   try {
-    const validCategory: boolean = NewCategorySchema.safeParse(
+    const validCategory: boolean = categorySchema.safeParse(
       req.body
     ).success;
     if (!validCategory)
@@ -589,7 +592,7 @@ categoryRouter.post("/create", async (req: Request, res: Response) => {
         .json({ message: "Invalid category parameters", data: [] });
 
     const returningId: number = (
-      await db.insert(categories).values(req.body).$returningId()
+      await db.insert(categories).values({ name: req.body.name, parentCategoryId: req.body.parentCategoryId, icon: req.body.icon, enabled: true }).$returningId()
     )[0].categoryId;
     const categoryCreated = await db
       .select()

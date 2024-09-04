@@ -41,7 +41,9 @@ POST http://localhost:3000/categorias/create
 Content-Type: application/json
 
 {
-  "name": "Fisica"
+  "name": "Fisica de particulas",
+  "parentCategoryId": 1,
+  "icon": "prueba2.svg"
 }
 
 
@@ -80,7 +82,17 @@ GET http://localhost:3000/books/especialidad/matematicas
 GET http://localhost:3000/categorias/all
 
 ### deletes a category and all its children
-DELETE http://localhost:3000/categorias/delete/1
+DELETE http://localhost:3000/categorias/delete/6
 
 ### get books by key 
 GET http://localhost:3000/search?query=el
+
+### update category
+PUT http://localhost:3000/categorias/update
+Content-Type: application/json
+
+{
+  "categoryId": 5,
+  "name": "couches",
+  "icon": "couches.png"
+}

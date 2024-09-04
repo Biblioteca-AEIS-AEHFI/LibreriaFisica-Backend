@@ -9,6 +9,7 @@ export function saveChildren(list: Array<Category>, parentId: number): Array<cat
     const obj: categoryFormat = {
       category_id: categoryEl.categoryId,
       name: categoryEl.name,
+      icon: categoryEl.icon,
       children: saveChildren(list, categoryEl.categoryId),
     };
     resFormatted.push(obj);
