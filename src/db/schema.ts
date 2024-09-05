@@ -91,7 +91,7 @@ export const books = mysqlTable("books", {
   bookId: int("book_id").primaryKey().autoincrement(),
   title: varchar("title", { length: 40 }),
   description: text("description"),
-  edition: int("edition"),
+  edition: int("edition").notNull(),
   year: int("year"),
   publisher: varchar("publisher", { length: 45 }),
   language: varchar("language", { length: 15 }),
