@@ -4,6 +4,9 @@ import { z, ZodError } from "zod";
 import { db } from "../db/db";
 import {
   books,
+  copies,
+  reserves,
+  loans,
   categoriesPerBook,
   BookSchema,
   NewBookSchema,
@@ -366,33 +369,67 @@ book.patch("/update/:bookId", async (req: Request, res: Response) => {
 });
 
 // Borrando libro
-book.delete("/delete/:bookId", async (req: Request, res: Response) => {
+book.delete("/:bookId", async (req: Request, res: Response) => {
   const { bookId } = validateSchema(idBookSchema, req.params, res) || {};
   if (bookId === undefined) return;
 
   try {
-    const checkBookQuery = await db
-      .select()
-      .from(books)
-      .where(eq(books.bookId, bookId));
+    await db.transaction(async (trx) => {
+      // Verificar si el libro existe
+      const checkBookQuery = await trx
+        .select()
+        .from(books)
+        .where(eq(books.bookId, bookId));
 
-    if (checkBookQuery.length === 0) {
-      return res.status(404).json({ message: "Book not found" });
-    }
+      if (checkBookQuery.length === 0) {
+        return res.status(404).json({ message: "Book not found" });
+      }
 
-    try {
-      await db.delete(books).where(eq(books.bookId, bookId));
+      // Eliminar reservas relacionadas
+      await trx
+        .delete(reserves)
+        .where(inArray(
+          reserves.copyId, 
+          trx.select({ 
+            copyId: copies.copyId 
+          })
+          .from(copies)
+          .where(eq(copies.bookId, bookId))));
+
+      // Eliminar préstamos relacionados
+      await trx
+        .delete(loans)
+        .where(inArray(
+          loans.reserveId, 
+          trx.select({
+            reserveId: reserves.reserveId 
+          })
+          .from(reserves)
+          .where(inArray(
+            reserves.copyId,
+            trx.select({
+              copyId: copies.copyId 
+            })
+            .from(copies)
+            .where(eq(copies.bookId, bookId))))));
+
+      // Eliminar copias relacionadas
+      await trx
+        .delete(copies)
+        .where(eq(copies.bookId, bookId));
+
+      // Finalmente, eliminar el libro
+      await trx.delete(books).where(eq(books.bookId, bookId));
 
       res.status(200).json({
         message: `Book with id: ${bookId} deleted successfully`,
       });
-    } catch (error) {
-      handleError(res, error, "Error deleting book");
-    }
+    });
   } catch (error) {
-    handleError(res, error, "Error searching for book to delete");
+    handleError(res, error, "Error deleting book and related records");
   }
 });
+
 
 // Crear endpoint para obtener libros por nombre
 book.get("/:title", async (req: Request, res: Response) => {
@@ -483,5 +520,130 @@ book.post("/categories", async (req: Request, res: Response) => {
     });
   } catch (error) {
     handleError(res, error, "");
+  }
+});
+
+// Obteniendo información detallada de un libro
+book.get("/bookdetail/:bookId", async (req: Request, res: Response) => {
+  const { bookId } = validateSchema(idBookSchema, req.params, res) || {};
+  if (bookId === undefined) return;
+
+  try {
+    // Obtener la información básica del libro
+    const book = await db.select({
+      bookId: books.bookId,
+      title: books.title,
+      description: books.description,
+      edition: books.edition,
+      year: books.year,
+      publisher: books.publisher,
+      language: books.language,
+      isbn: books.isbn,
+    })
+    .from(books)
+    .where(eq(books.bookId, bookId));
+
+    if (book.length === 0) {
+      return res.status(404).json({ message: "Book not found" });
+    }
+
+    // Contar la cantidad de copias disponibles (state = true)
+    const availableCopiesCount = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(copies)
+      .where(
+        eq(copies.bookId, bookId) &&
+        eq(copies.state, true) // Disponibilidad de las copias
+      )
+      .then((result) => result[0]?.count || 0);
+
+    // Contar la cantidad de copias prestadas (ejemplo: `state` podría ser "prestado" o `loans` asociados a las copias)
+    const borrowedCopiesCount = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(loans)
+      .innerJoin(reserves, eq(loans.reserveId, reserves.reserveId))
+      .innerJoin(copies, eq(reserves.copyId, copies.copyId))
+      .where(eq(copies.bookId, bookId))
+      .then((result) => result[0]?.count || 0);
+
+    // Obtener lista de autores del libro
+    const authorsIdList: any = await db
+      .select({ authorId: authorsPerBook.authorId })
+      .from(authorsPerBook)
+      .where(eq(authorsPerBook.bookId, bookId));
+
+    const authorsList: Author[] = await db
+      .select()
+      .from(authors)
+      .where(inArray(authors.authorId, authorsIdList));
+
+    // Obtener la categoría del libro
+    const category = await db
+      .select({
+        categoryId: categoriesPerBook.categoryId,
+        name: categories.name
+      })
+      .from(categoriesPerBook)
+      .innerJoin(categories, eq(categoriesPerBook.categoryId, categories.categoryId))
+      .where(eq(categoriesPerBook.bookId, bookId))
+      .limit(1); // Obtiene solo la primera categoría
+
+    // Obtén el ID de la categoría si existe
+    const categoryId = category[0]?.categoryId;
+
+    // Construye la consulta para obtener libros similares
+    const similarBooksQuery = db
+      .select({
+        bookId: books.bookId,
+        isbn: books.isbn,
+        title: books.title,
+      })
+      .from(books)
+      .innerJoin(categoriesPerBook, eq(books.bookId, categoriesPerBook.bookId))
+      .innerJoin(authorsPerBook, eq(books.bookId, authorsPerBook.bookId))
+      .where(
+        categoryId !== undefined && categoryId !== null
+          ?
+              eq(categoriesPerBook.categoryId, categoryId) // Libros de la misma categoría
+              ||
+              inArray(authorsPerBook.authorId, authorsList.map(author => author.authorId)) // Libros del mismo autor
+            
+          : inArray(authorsPerBook.authorId, authorsList.map(author => author.authorId)) // Solo por autor si no hay categoría
+      )
+      .limit(13); // Limita los resultados a 13
+
+    const similarBooks = await similarBooksQuery;
+
+    // Obtener autores para libros similares
+    const similarBooksWithAuthors = await Promise.all(similarBooks.map(async (book) => {
+      const similarBookAuthors: any = await db
+        .select({ authorId: authorsPerBook.authorId })
+        .from(authorsPerBook)
+        .where(eq(authorsPerBook.bookId, book.bookId));
+
+      const authorsForSimilarBook = await db
+        .select()
+        .from(authors)
+        .where(inArray(authors.authorId, similarBookAuthors));
+
+      return {
+        ...book,
+        authors: authorsForSimilarBook.map(author => `${author.firstName} ${author.lastName}`).join(', ')
+      };
+    }));
+
+    res.status(200).json({
+      message: "Book fetched successfully",
+      data: {
+        ...book[0],
+        booksAvailable: availableCopiesCount,
+        borrowedBooks: borrowedCopiesCount,
+        authors: authorsList.map(author => `${author.firstName} ${author.lastName}`).join(', '),
+        category: category[0]?.name || null, // Agrega la categoría
+        similarBooks: similarBooksWithAuthors // Libros similares con autores
+      }
+    });
+  } catch (error) {
+    handleError(res, error, "Error searching book");
   }
 });
