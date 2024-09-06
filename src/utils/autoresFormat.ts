@@ -1,8 +1,8 @@
 export function formatAuthorsNames(list: Array<any>) {
   const booksWithAuthors: any = {}
   list.forEach((element: any) => {
-    if (!booksWithAuthors[element.bookId]) booksWithAuthors[element.bookId] = ''
-    booksWithAuthors[element.bookId] = booksWithAuthors[element.bookId] + element.authorFirstName + element.authorLastName
+    if (!booksWithAuthors[element.books.bookId]) booksWithAuthors[element.books.bookId] = ''
+    booksWithAuthors[element.books.bookId] = booksWithAuthors[element.books.bookId] + " " + element.authors.firstName + " " + element.authors.lastName + ','
   })
   return booksWithAuthors
 }

@@ -14,18 +14,17 @@ POST http://localhost:3000/auth/signup
 Content-Type: application/json
 
 {
-  "numeroCuenta": "20221001806",
+  "numeroCuenta": "8899001122",
   "password": "password",
-  "firstName": "carlos",
-  "secondName": "thomas",
-  "firstSurname": "flores",
-  "email": "thomas@unah.hn",
-  "phoneNumber": "13345658",
-  "account": "thomas123",
+  "firstName": "elena",
+  "secondName": "maria",
+  "firstSurname": "morales",
+  "secondSurname": "gomez",
+  "email": "elena.morales@unah.hn",
+  "phoneNumber": "1019",
   "userType": 1,
-  "reputation": 1
+  "reputation": 2
 }
-
 
 ### obtener categorias
 GET http://localhost:3000/categorias
@@ -85,7 +84,7 @@ GET http://localhost:3000/categorias/all
 DELETE http://localhost:3000/categorias/delete/6
 
 ### get books by key 
-GET http://localhost:3000/search?query=el
+GET http://localhost:3000/search?query=a
 
 ### update category
 PUT http://localhost:3000/categorias/update
