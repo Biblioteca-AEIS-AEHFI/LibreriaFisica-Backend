@@ -84,7 +84,7 @@ GET http://localhost:3000/categorias/all
 DELETE http://localhost:3000/categorias/delete/6
 
 ### get books by key 
-GET http://localhost:3000/search?query=a
+GET http://localhost:3000/search?query=fi
 
 ### update category
 PUT http://localhost:3000/categorias/update
@@ -95,3 +95,6 @@ Content-Type: application/json
   "name": "couches",
   "icon": "couches.png"
 }
+
+### obtiene info para home
+GET http://localhost:3000/prestamos/estudiantes/1234567890

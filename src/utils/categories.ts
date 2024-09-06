@@ -16,3 +16,24 @@ export function saveChildren(list: Array<Category>, parentId: number): Array<cat
   });
   return resFormatted;
 }
+
+
+export function trackCategories(list: Array<any>) {
+  const categories: any = {}
+  list.forEach(categoryEl => {
+    if (categoryEl.categories?.parentCategoryId == null && !categories[categoryEl.categories?.categoryId])
+      categories[categoryEl.categories?.categoryId] = { name: categoryEl.categories?.name, children: [] } 
+
+    if (categoryEl.categories?.parentCategoryId != null) {
+      categories[categoryEl.categories?.parentCategoryId].children.push(categoryEl.categories?.name)
+    }
+  })
+  return categories
+}
+
+
+export function getLeastCategory(categories: any, categoryId: number) {
+  const categoryObj = categories[categoryId]
+  if (!categoryObj) return null
+  return (categoryObj.children.length == 0 ? categoryObj.name : categoryObj.children.at(-1))
+}

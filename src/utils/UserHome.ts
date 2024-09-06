@@ -12,6 +12,7 @@ import {
 } from "../db/schema";
 import { formatAuthorsNames } from "./autoresFormat";
 
+// TODO: FIX ALL USER HOME ENDPOINTS
 export class UserHome {
   static async getRecommendedBooksByMostUserLoans(numeroCuenta: string) {
     const mostBooksCategoriesLoaned: any = db
@@ -20,14 +21,15 @@ export class UserHome {
         categoryLoanedQuantity: count(categoriesPerBook.categoryId),
       })
       .from(loans)
-      .innerJoin(reserves, eq(loans.reserveId, reserves.reserveId))
-      .innerJoin(copies, eq(reserves.copyId, copies.copyId))
-      .innerJoin(categoriesPerBook, eq(copies.bookId, categoriesPerBook.bookId))
-      .innerJoin(users, eq(reserves.userId, users.userId))
+      .leftJoin(reserves, eq(loans.reserveId, reserves.reserveId))
+      .leftJoin(copies, eq(reserves.copyId, copies.copyId))
+      .leftJoin(categoriesPerBook, eq(copies.bookId, categoriesPerBook.bookId))
+      .leftJoin(users, eq(reserves.userId, users.userId))
       .groupBy(categoriesPerBook.categoryId)
       .orderBy(count(categoriesPerBook.categoryId))
       .having(eq(users.numeroCuenta, numeroCuenta))
-      
+    
+    console.log('MOSTUSERLOAN: ', mostBooksCategoriesLoaned)
     if (mostBooksCategoriesLoaned.length == 0) return [];
     // [{1, 3}, {2, 2}, {4, 1}]
     const recommendedBooksByMostUserLoans: Array<any> = [];
@@ -39,9 +41,9 @@ export class UserHome {
       const booksWithMostLoansByCategory = await db
       .select()
       .from(categoriesPerBook)
-      .innerJoin(books, eq(categoriesPerBook.bookId, books.bookId))
-      .innerJoin(authorsPerBook, eq(books.bookId, authorsPerBook.bookId))
-      .innerJoin(authors, eq(authorsPerBook.authorId, authors.authorId))
+      .leftJoin(books, eq(categoriesPerBook.bookId, books.bookId))
+      .leftJoin(authorsPerBook, eq(books.bookId, authorsPerBook.bookId))
+      .leftJoin(authors, eq(authorsPerBook.authorId, authors.authorId))
       .where(
         eq(
           categoriesPerBook.categoryId,
@@ -49,9 +51,11 @@ export class UserHome {
         )
       );
 
-      const authorsNames: Array<any> = formatAuthorsNames(mostBooksCategoriesLoaned);
+      const authorsNames: Array<any> = formatAuthorsNames(booksWithMostLoansByCategory);
       booksWithMostLoansByCategory.forEach((res) => {
-        const authorsNamesFormatted = authorsNames[res.books.bookId];
+        let authorsNamesFormatted = ''
+        if (res.books?.bookId != null)
+          authorsNamesFormatted = authorsNames[res.books.bookId];
         const obj = { authors: authorsNamesFormatted, ...res.books };
         recommendedBooksByMostUserLoans.push(obj);
       });
@@ -78,7 +82,6 @@ export class UserHome {
       if (mostBooksCategoriesLoaned.length == 0) return [];
       // [{1, 3}, {2, 2}, {4, 1}]
       const recommendedBooksByMostUserLoans: Array<any> = [];
-      const authorsNames: any = formatAuthorsNames(mostBooksCategoriesLoaned);
       let iterator = 0;
       while (
         recommendedBooksByMostUserLoans.length < 8 &&
@@ -96,7 +99,8 @@ export class UserHome {
               mostBooksCategoriesLoaned[iterator].categoryId
             )
           );
-  
+          
+        const authorsNames: any = formatAuthorsNames(mostBooksCategoriesLoaned);
         booksWithMostLoansByCategory.forEach((res) => {
           const authorsNamesFormatted = authorsNames[res.books.bookId];
           const obj = { authors: authorsNamesFormatted, ...res.books };
@@ -148,6 +152,8 @@ export class UserHome {
       const results = await db
       .select()
       .from(books)
+      .leftJoin(authorsPerBook, eq(books.bookId, authorsPerBook.bookId))
+      .leftJoin(authors, eq(authorsPerBook.authorId, authors.authorId))
       .where(gte(books.entryDate, oneMonthAgo))
 
       if (results.length == 0) return []
@@ -157,8 +163,8 @@ export class UserHome {
       for (let i = 0; i < results.length; i++) {
         if (lastAddedBooks.length > 15) break 
         
-        const authors = authorsNames[results[i].bookId]
-        const bookObj = { authors, ...results[i] }
+        const authorsNamesFormatted = authorsNames[results[i].books.bookId]
+        const bookObj = { authors: authorsNamesFormatted, title: results[i].books.title, bookId: results[i].books.bookId, isbn: results[i].books.isbn }
         lastAddedBooks.push(bookObj)
       }
       return lastAddedBooks

@@ -9,8 +9,9 @@ import {
   categoriesPerBook,
   copies,
 } from "../db/schema";
-import { formatAuthorsNames } from "../utils/autoresFormat";
+import { formatAuthorsNames, getAuthorsNames } from "../utils/autoresFormat";
 import { numberToOrdinal } from "../utils/editions";
+import { getLeastCategory, trackCategories } from "../utils/categories";
 
 export const searchRouter: Router = Router();
 
@@ -71,7 +72,7 @@ searchRouter.get("/", async (req: Request, res: Response) => {
   try {
     // Perform a single query that searches across categories, authors, and book titles
     const searchResults = await db
-      .select()
+      .selectDistinct()
       .from(books)
       .leftJoin(categoriesPerBook, eq(books.bookId, categoriesPerBook.bookId))
       .leftJoin(categories, eq(categoriesPerBook.categoryId, categories.categoryId))
@@ -89,27 +90,34 @@ searchRouter.get("/", async (req: Request, res: Response) => {
 
     // Format authors' names
     const authorsNames = formatAuthorsNames(searchResults);
+    const categoriesFound = trackCategories(searchResults)
     const searchedData: Array<any> = [];
-
     // Use a for...of loop to handle asynchronous operations
     for (const bookEl of searchResults) {
+      // if the list is empty it means there are not copies/books available to loan
+      // state false indicates the book is available. True means the book is currently in use
       const bookCopies = (
         await db.select().from(copies).where(eq(copies.bookId, bookEl.books.bookId))
       ).filter((copy) => copy.state == false); // only include copies with state == false
 
-      const authorsNamesOrganized: string = authorsNames[bookEl.books.bookId];
+      const authorsByBook: string = getAuthorsNames(authorsNames[bookEl.books.bookId]) 
       const ordinalEdition = numberToOrdinal(bookEl.books.edition)
       const stockState = bookCopies.length > 0 ? 1 : 0;
 
+      if (bookEl.categories?.categoryId == undefined) continue
+
+      const bookCategory = getLeastCategory(categoriesFound, bookEl.categories.categoryId)
+
       const bookObj = {
-        authors: authorsNamesOrganized.slice(0, -1),
+        authors: authorsByBook.slice(0, -1),
         bookEdition: ordinalEdition,
         bookId: bookEl.books.bookId,
         title: bookEl.books.title,
         isbn: bookEl.books.isbn,
         stockState,
+        category: bookCategory
       };
-//bookId: 1, isbn: 978-3-16-148410-0, title: matematicas, authors: autor1, bookEdition: 3ra, stockState: 1 
+      //bookId: 1, isbn: 978-3-16-148410-0, title: matematicas, authors: autor1, bookEdition: 3ra, stockState: 1 
       if ((searchedData.filter(book => book.bookId == bookObj.bookId)).length == 0) 
         searchedData.push(bookObj);
 
