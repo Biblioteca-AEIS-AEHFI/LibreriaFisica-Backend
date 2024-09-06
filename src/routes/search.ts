@@ -97,21 +97,22 @@ searchRouter.get("/", async (req: Request, res: Response) => {
         await db.select().from(copies).where(eq(copies.bookId, bookEl.books.bookId))
       ).filter((copy) => copy.state == false); // only include copies with state == false
 
-      const authorsNamesOrganized = authorsNames[bookEl.books.bookId];
-      const ordinal =
-        typeof numberToOrdinal(bookEl.books.edition) == "number"
-          ? numberToOrdinal(bookEl.books.edition)
-          : bookEl.books.edition;
+      const authorsNamesOrganized: string = authorsNames[bookEl.books.bookId];
+      const ordinalEdition = numberToOrdinal(bookEl.books.edition)
       const stockState = bookCopies.length > 0 ? 1 : 0;
 
       const bookObj = {
-        authorsNamesOrganized,
-        bookEdition: ordinal,
-        ...bookEl,
+        authors: authorsNamesOrganized.slice(0, -1),
+        bookEdition: ordinalEdition,
+        bookId: bookEl.books.bookId,
+        title: bookEl.books.title,
+        isbn: bookEl.books.isbn,
         stockState,
       };
+//bookId: 1, isbn: 978-3-16-148410-0, title: matematicas, authors: autor1, bookEdition: 3ra, stockState: 1 
+      if ((searchedData.filter(book => book.bookId == bookObj.bookId)).length == 0) 
+        searchedData.push(bookObj);
 
-      searchedData.push(bookObj);
     }
 
     return res
