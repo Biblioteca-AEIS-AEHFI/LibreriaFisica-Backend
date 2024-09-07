@@ -46,7 +46,7 @@ export const loansRouter: Router = Router();
  *                      type: array
  *                      items:
  *                        type: object
- *                        example: { userName: carlos, loans: [{bookId: 1, isbn: 978-3-16-148410-0, title: matematicas, authors: autor1}], recommended: [{bookId: 1, isbn: 978-3-16-148410-0, title: matematicas, authors: autor1}], popularBooks: [{bookId: 1, isbn: 978-3-16-148410-0, title: matematicas, authors: autor1}], newBooks: [{bookId: 1, isbn: 978-3-16-148410-0, title: matematicas, authors: autor1}], categoryMostRequested: [{bookId: 1, isbn: 978-3-16-148410-0, title: matematicas, authors: autor1}] }
+ *                        example: { userName: carlos, loans: [{ idLoan: "1", returnDate: "10/07/1999", porcentLoan: "55", currentBook: { idBook: "1", isbn: "978-8499082479", bookName: "El nombre del viento", authors: "Patrick Rothfus" }}], recommended: [{bookId: 1, isbn: 978-3-16-148410-0, title: matematicas, authors: autor1}], popularBooks: [{bookId: 1, isbn: 978-3-16-148410-0, title: matematicas, authors: autor1}], newBooks: [{bookId: 1, isbn: 978-3-16-148410-0, title: matematicas, authors: autor1}], categoryMostRequested: [{bookId: 1, isbn: 978-3-16-148410-0, title: matematicas, authors: autor1}] }
  *        5xx:
  *          description: FAILED
  *          content:
