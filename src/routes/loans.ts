@@ -68,7 +68,7 @@ loansRouter.get("/estudiantes/:NCuenta", async (req: Request, res: Response) => 
       const recommended = await UserHome.getRecommendedBooksByMostUserLoans(studentId);
       const popularBooks = await UserHome.getPopularBooks();
       const newBooks = await UserHome.getLastAdded();
-      const categoryMostRequested =await UserHome.getRecommendedBooksByMostUsersLoans();
+      const categoryMostRequested = await UserHome.getRecommendedBooksByMostUsersLoans();
 
       const homeInfo = {
         userName: studentName,
@@ -82,6 +82,7 @@ loansRouter.get("/estudiantes/:NCuenta", async (req: Request, res: Response) => 
         .status(200)
         .json({ message: "data handled successfully", data: homeInfo });
     } catch (err) {
+      console.log(err)
       return res
         .status(500)
         .json({ message: "could not get loans information " });

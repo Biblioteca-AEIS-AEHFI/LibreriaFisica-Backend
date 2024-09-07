@@ -106,10 +106,11 @@ searchRouter.get("/", async (req: Request, res: Response) => {
 
       if (bookEl.categories?.categoryId == undefined) continue
 
+      // TODO: get the least category.
       const bookCategory = getLeastCategory(categoriesFound, bookEl.categories.categoryId)
 
       const bookObj = {
-        authors: authorsByBook.slice(0, -1),
+        authors: authorsByBook,
         bookEdition: ordinalEdition,
         bookId: bookEl.books.bookId,
         title: bookEl.books.title,
