@@ -12,7 +12,7 @@ export function getAuthorsNames(list: Set<string>): string {
   list.forEach(author => {
     authors += author + ", "
   })
-  return authors
+  return authors.slice(0, -2)
 }
 
 // [{1, author: pepe}, {2, author: nico}, {1, author: pepe2}]  return: {1: "pepe, pepe2, ", 2: "nico,"}
