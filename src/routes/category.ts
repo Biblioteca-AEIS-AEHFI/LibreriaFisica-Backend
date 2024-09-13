@@ -17,3 +17,22 @@ categoriesRouter.get("/parents", async (req: Request, res: Response) => {
 
   return res.status(500).json({ e: "No parent categories found" });
 });
+
+categoriesRouter.get(
+  "/children/:parentCategoryId",
+  async (req: Request, res: Response) => {
+    const parentCategoryId = parseInt(req.params.parentCategoryId);
+
+    // Fetch children categories and books corresponding to the parent category specified
+    const categoryBooks = await getBooksByCategory(parentCategoryId);
+    const childrenCategories = await db
+      .select()
+      .from(categories)
+      .where(eq(categories.parentCategoryId, parentCategoryId));
+
+    return res.status(200).json({
+      books: categoryBooks,
+      childrenCategories: childrenCategories,
+    });
+  }
+);

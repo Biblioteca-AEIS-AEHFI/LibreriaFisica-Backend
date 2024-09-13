@@ -1,8 +1,8 @@
-import { Router, type Request, type Response } from "express";
+import e, { Router, type Request, type Response } from "express";
 import { db } from "../db/db";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { books, NewBookSchema, type Book } from "../db/schema/books";
-import { authors, AuthorSchema, type Author } from "../db/schema/authors";
+import { authors, type Author } from "../db/schema/authors";
 import {
   authorsPerBook,
   type AuthorPerBook,
@@ -12,7 +12,7 @@ import {
   categoriesPerBook,
   type CategoryPerBook,
 } from "../db/schema/categoriesPerBook";
-import { number, z } from "zod";
+import { z } from "zod";
 
 type BookResponse = Book & {
   authors: Author[];
@@ -30,45 +30,12 @@ booksRouter.get("/:bookId", async (req: Request, res: Response) => {
   const bookId = parseInt(req.params.bookId);
 
   // Fetch book data
-  const bookData: Book[] = await db
-    .select()
-    .from(books)
-    .where(eq(books.bookId, bookId));
+  const bookData = await getFullBookData(bookId);
 
-  if (!bookData[0])
-    return res.status(404).json({ e: "Book requested not found" });
-
-  const authorsData: Author[] = await db
-    .select({
-      authorId: authors.authorId,
-      firstName: authors.firstName,
-      lastName: authors.lastName,
-    })
-    .from(authors)
-    .leftJoin(authorsPerBook, eq(authors.authorId, authorsPerBook.authorId))
-    .where(eq(authorsPerBook.bookId, bookId));
-
-  const categoriesData: Category[] = await db
-    .select({
-      categoryId: categories.categoryId,
-      name: categories.name,
-      parentCategoryId: categories.parentCategoryId,
-    })
-    .from(categories)
-    .leftJoin(
-      categoriesPerBook,
-      eq(categoriesPerBook.categoryId, categories.categoryId)
-    )
-    .where(eq(categoriesPerBook.bookId, bookId));
-
-  const result: BookResponse = {
-    ...bookData[0],
-    authors: authorsData,
-    categories: categoriesData,
-  };
-
-  return res.status(200).json(result);
+  // Send results
+  return res.status(200).json(bookData);
 });
+
 
 booksRouter.put("/:bookId", async (req: Request, res: Response) => {
   const bookId = parseInt(req.params.bookId);
@@ -131,3 +98,70 @@ booksRouter.put("/:bookId", async (req: Request, res: Response) => {
 
   return res.status(200).json({ msg: "Update successful" });
 });
+
+export async function getBooksByCategory(categoryId: number) {
+  // Get BookId of each book linked with the category specified
+  const categoryBooks = await db
+    .select({
+      bookId: books.bookId,
+    })
+    .from(books)
+    .leftJoin(categoriesPerBook, eq(categoriesPerBook.bookId, books.bookId))
+    .where(eq(categoriesPerBook.categoryId, categoryId));
+
+  const bookIds = categoryBooks.map((book) => book.bookId);
+
+  // Get books' data
+  const booksData: Book[] = await db
+    .select()
+    .from(books)
+    .where(inArray(books.bookId, bookIds));
+
+  return booksData;
+}
+
+async function getFullBookData(
+  bookId: number
+): Promise<BookResponse | { e: string }> {
+  // Get Books data
+  const bookData: Book[] = await db
+    .select()
+    .from(books)
+    .where(eq(books.bookId, bookId));
+
+  if (!bookData[0]) return { e: "Book requested not found" };
+
+  // Get Authors data
+  const authorsData: Author[] = await db
+    .select({
+      authorId: authors.authorId,
+      firstName: authors.firstName,
+      lastName: authors.lastName,
+    })
+    .from(authors)
+    .leftJoin(authorsPerBook, eq(authors.authorId, authorsPerBook.authorId))
+    .where(eq(authorsPerBook.bookId, bookId));
+
+  // Fetch Categories data
+  const categoriesData: Category[] = await db
+    .select({
+      categoryId: categories.categoryId,
+      name: categories.name,
+      parentCategoryId: categories.parentCategoryId,
+    })
+    .from(categories)
+    .leftJoin(
+      categoriesPerBook,
+      eq(categoriesPerBook.categoryId, categories.categoryId)
+    )
+    .where(eq(categoriesPerBook.bookId, bookId));
+
+  // Package results
+  const result: BookResponse = {
+    ...bookData[0],
+    authors: authorsData,
+    categories: categoriesData,
+  };
+
+  return result;
+}
