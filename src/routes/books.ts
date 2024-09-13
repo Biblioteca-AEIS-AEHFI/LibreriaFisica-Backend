@@ -325,6 +325,99 @@ book.post("/create", async (req: Request, res: Response) => {
 });
 
 // Actualizando datos de libro
+/**
+ * @openapi
+ *  /books/update/{bookId}:
+ *    patch:
+ *      tags:
+ *        - Books
+ *      summary: Update book details
+ *      parameters:
+ *        - name: bookId
+ *          in: path
+ *          required: true
+ *          schema:
+ *            type: number
+ *            example: 1
+ *          description: The ID of the book to update
+ *      requestBody:
+ *        required: true
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              $ref: '#/components/schemas/UpdateBookRequest'
+ *              example: { "title": "Fisica Avanzada", "description": "some updated description", "edition": 11, "year": 2021, "publisher": "New Publisher", "language": "eng", "isbn": "978-0-061-96436-7", "amount": 20 }
+ *      responses:
+ *        200:
+ *          description: Book updated successfully
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  message:
+ *                    type: string
+ *                    example: Book with id: 1 updated successfully
+ *        404:
+ *          description: Book not found
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  message:
+ *                    type: string
+ *                    example: Book not found
+ *        400:
+ *          description: Invalid data
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  message:
+ *                    type: string
+ *                    example: data does not match
+ *        500:
+ *          description: Server error
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  message:
+ *                    type: string
+ *                    example: Error updating book
+ *
+ * components:
+ *  schemas:
+ *    UpdateBookRequest:
+ *      type: object
+ *      properties:
+ *        title:
+ *          type: string
+ *          example: Fisica Avanzada
+ *        description:
+ *          type: string
+ *        edition:
+ *          type: number
+ *          example: 11
+ *        year:
+ *          type: number
+ *          example: 2021
+ *        publisher:
+ *          type: string
+ *        language:
+ *          type: string
+ *          example: eng
+ *        isbn:
+ *          type: string
+ *          example: 978-0-061-96436-7
+ *        amount:
+ *          type: number
+ *          example: 20
+ */
 book.patch("/update/:bookId", async (req: Request, res: Response) => {
   const bookData = validateSchema(UpdateBookSchema, req.body, res) as
     | any
@@ -369,6 +462,53 @@ book.patch("/update/:bookId", async (req: Request, res: Response) => {
 });
 
 // Borrando libro
+/**
+ * @openapi
+ *  /books/{bookId}:
+ *    delete:
+ *      tags:
+ *        - Books
+ *      summary: Delete a book by ID
+ *      parameters:
+ *        - name: bookId
+ *          in: path
+ *          required: true
+ *          schema:
+ *            type: number
+ *            example: 1
+ *          description: The ID of the book to delete
+ *      responses:
+ *        200:
+ *          description: Book deleted successfully
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  message:
+ *                    type: string
+ *                    example: Book with id: 1 deleted successfully
+ *        404:
+ *          description: Book not found
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  message:
+ *                    type: string
+ *                    example: Book not found
+ *        500:
+ *          description: Server error
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  message:
+ *                    type: string
+ *                    example: Error deleting book and related records
+ */
 book.delete("/:bookId", async (req: Request, res: Response) => {
   const { bookId } = validateSchema(idBookSchema, req.params, res) || {};
   if (bookId === undefined) return;
@@ -432,6 +572,66 @@ book.delete("/:bookId", async (req: Request, res: Response) => {
 
 
 // Crear endpoint para obtener libros por nombre
+/**
+ * @openapi
+ *  /books/{title}:
+ *    get:
+ *      tags:
+ *        - Books
+ *      summary: Get books by title
+ *      parameters:
+ *        - name: title
+ *          in: path
+ *          required: true
+ *          schema:
+ *            type: string
+ *            example: Fisica para ingeniería
+ *          description: The title of the book to search for
+ *      responses:
+ *        200:
+ *          description: Books retrieved successfully
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  message:
+ *                    type: string
+ *                    example: success
+ *                  data:
+ *                    type: array
+ *                    items:
+ *                      $ref: '#/components/schemas/Books'
+ *                    example:
+ *                      - title: Fisica para ingeniería
+ *                        description: some description
+ *                        edition: 10
+ *                        year: 2017
+ *                        publisher: publisher
+ *                        language: esp
+ *                        isbn: isbn3
+ *                        amount: 15
+ *        404:
+ *          description: No books found with the given title
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  message:
+ *                    type: string
+ *                    example: No books found with title: Fisica para ingeniería
+ *        500:
+ *          description: Server error
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  message:
+ *                    type: string
+ *                    example: Error retrieving books
+ */
 book.get("/:title", async (req: Request, res: Response) => {
   let { title } = validateSchema(PartialGetBook, req.params, res) || {};
   title = title.trim();
@@ -453,6 +653,66 @@ book.get("/:title", async (req: Request, res: Response) => {
 });
 
 // Crear endpoint para obtener libros por el id de la categoría
+/**
+ * @openapi
+ *  /books/{categoryId}:
+ *    get:
+ *      tags:
+ *        - Books
+ *      summary: Get books by category ID
+ *      parameters:
+ *        - name: categoryId
+ *          in: path
+ *          required: true
+ *          schema:
+ *            type: integer
+ *            example: 1
+ *          description: The ID of the category to search books by
+ *      responses:
+ *        200:
+ *          description: Books retrieved successfully
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  message:
+ *                    type: string
+ *                    example: success
+ *                  data:
+ *                    type: array
+ *                    items:
+ *                      $ref: '#/components/schemas/Books'
+ *                    example:
+ *                      - title: Fisica para ingeniería
+ *                        description: some description
+ *                        edition: 10
+ *                        year: 2017
+ *                        publisher: publisher
+ *                        language: esp
+ *                        isbn: isbn3
+ *                        amount: 15
+ *        404:
+ *          description: No books found for the given category ID
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  message:
+ *                    type: string
+ *                    example: No books found for category ID: 1
+ *        500:
+ *          description: Server error
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  message:
+ *                    type: string
+ *                    example: Error retrieving books
+ */
 book.get("/:categoryId", async (req: Request, res: Response) => {
   const { categoryId } = validateSchema(PartialGetCat, req.params, res) || {};
 
@@ -479,6 +739,88 @@ book.get("/:categoryId", async (req: Request, res: Response) => {
 });
 
 // Crear endpoint para obtener libros por conjunto de ids de categorias
+/**
+ * @openapi
+ *  /books/categories:
+ *    post:
+ *      tags:
+ *        - Books
+ *      summary: Get books by multiple category IDs
+ *      requestBody:
+ *        required: true
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                categories:
+ *                  type: array
+ *                  items:
+ *                    type: integer
+ *                  example: [1, 2, 3]
+ *              required:
+ *                - categories
+ *              description: Array of category IDs to search for books
+ *      responses:
+ *        200:
+ *          description: Books retrieved successfully
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  message:
+ *                    type: string
+ *                    example: success
+ *                  data:
+ *                    type: array
+ *                    items:
+ *                      $ref: '#/components/schemas/Books'
+ *                    example:
+ *                      - title: Fisica para ingeniería
+ *                        description: some description
+ *                        edition: 10
+ *                        year: 2017
+ *                        publisher: publisher
+ *                        language: esp
+ *                        isbn: isbn3
+ *                        amount: 15
+ *        400:
+ *          description: Invalid or missing categories array
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  message:
+ *                    type: string
+ *                    example: "Se requiere un arreglo de categorías."
+ *        404:
+ *          description: No books found for the given category IDs
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  message:
+ *                    type: string
+ *                    example: Books not found.
+ *                  data:
+ *                    type: array
+ *                    items:
+ *                      type: string
+ *                    example: []
+ *        500:
+ *          description: Server error
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  message:
+ *                    type: string
+ *                    example: Error retrieving books
+ */
 book.post("/categories", async (req: Request, res: Response) => {
   const { categories } = req.body;
 
@@ -524,6 +866,109 @@ book.post("/categories", async (req: Request, res: Response) => {
 });
 
 // Obteniendo información detallada de un libro
+/**
+ * @openapi
+ *  /books/bookdetail/{bookId}:
+ *    get:
+ *      tags:
+ *        - Books
+ *      summary: Get detailed information about a specific book
+ *      parameters:
+ *        - name: bookId
+ *          in: path
+ *          required: true
+ *          description: ID of the book to fetch details for
+ *          schema:
+ *            type: integer
+ *            example: 1
+ *      responses:
+ *        200:
+ *          description: Book details retrieved successfully
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  message:
+ *                    type: string
+ *                    example: "Book fetched successfully"
+ *                  data:
+ *                    type: object
+ *                    properties:
+ *                      bookId:
+ *                        type: integer
+ *                        example: 1
+ *                      title:
+ *                        type: string
+ *                        example: "Fisica para ingeniería"
+ *                      description:
+ *                        type: string
+ *                        example: "A book on engineering physics"
+ *                      edition:
+ *                        type: integer
+ *                        example: 10
+ *                      year:
+ *                        type: integer
+ *                        example: 2017
+ *                      publisher:
+ *                        type: string
+ *                        example: "McGraw-Hill"
+ *                      language:
+ *                        type: string
+ *                        example: "Spanish"
+ *                      isbn:
+ *                        type: string
+ *                        example: "978-3-16-148410-0"
+ *                      booksAvailable:
+ *                        type: integer
+ *                        example: 5
+ *                      borrowedBooks:
+ *                        type: integer
+ *                        example: 3
+ *                      authors:
+ *                        type: string
+ *                        example: "John Doe, Jane Smith"
+ *                      category:
+ *                        type: string
+ *                        example: "Engineering"
+ *                      similarBooks:
+ *                        type: array
+ *                        items:
+ *                          type: object
+ *                          properties:
+ *                            bookId:
+ *                              type: integer
+ *                              example: 2
+ *                            isbn:
+ *                              type: string
+ *                              example: "978-3-16-148410-1"
+ *                            title:
+ *                              type: string
+ *                              example: "Mathematics for Engineers"
+ *                            authors:
+ *                              type: string
+ *                              example: "John Doe, Richard Roe"
+ *        404:
+ *          description: Book not found
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  message:
+ *                    type: string
+ *                    example: "Book not found"
+ *        500:
+ *          description: Server error
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  message:
+ *                    type: string
+ *                    example: "Error searching book"
+ */
 book.get("/bookdetail/:bookId", async (req: Request, res: Response) => {
   const { bookId } = validateSchema(idBookSchema, req.params, res) || {};
   if (bookId === undefined) return;
