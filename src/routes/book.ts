@@ -1,6 +1,6 @@
 import e, { Router, type Request, type Response } from "express";
 import { db } from "../db/db";
-import { eq, inArray, is } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { books, NewBookSchema, type Book } from "../db/schema/books";
 import { authors, type Author } from "../db/schema/authors";
 import {
@@ -25,6 +25,83 @@ const BookEditSchema = NewBookSchema.extend({
 });
 
 export const booksRouter = Router();
+
+/**
+ *
+ *@openapi
+ * /books/{bookId}:
+ *  get:
+ *    tags:
+ *      - Books
+ *    summary: get book by bookId as url parameter
+ *    parameters:
+ *      bookId:
+ *        type: integer
+ *    responses:
+ *      200:
+ *        description: OK
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              required:
+ *                - message
+ *              properties:
+ *                message:
+ *                  type: string
+ *      404:
+ *        description: Book requested not found
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              required:
+ *                - message
+ *              properties:
+ *                message:
+ *                  type: string
+ *  put:
+ *    tags:
+ *      - Books
+ *    summary: update book data by bookId as url parameter
+ *    parameters:
+ *      bookId:
+ *        type: integer
+ *    responses:
+ *      200:
+ *        description: Update successful
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              required:
+ *                - message
+ *              properties:
+ *                message:
+ *                  type: string
+ *      400:
+ *        description: BookId not specified
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              required:
+ *                - message
+ *              properties:
+ *                message:
+ *                  type: string
+ *      404:
+ *        description: book requested not found
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              required:
+ *                - message
+ *              properties:
+ *                message:
+ *                  type: string
+ */
 
 booksRouter.get("/:bookId", async (req: Request, res: Response) => {
   const bookId = parseInt(req.params.bookId);
