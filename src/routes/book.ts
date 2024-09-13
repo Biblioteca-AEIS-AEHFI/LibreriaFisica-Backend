@@ -1,6 +1,6 @@
 import e, { Router, type Request, type Response } from "express";
 import { db } from "../db/db";
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, is } from "drizzle-orm";
 import { books, NewBookSchema, type Book } from "../db/schema/books";
 import { authors, type Author } from "../db/schema/authors";
 import {
@@ -32,10 +32,13 @@ booksRouter.get("/:bookId", async (req: Request, res: Response) => {
   // Fetch book data
   const bookData = await getFullBookData(bookId);
 
+  if (!bookData) {
+    return res.status(404).json({ e: "Book requested not found" });
+  }
+
   // Send results
   return res.status(200).json(bookData);
 });
-
 
 booksRouter.put("/:bookId", async (req: Request, res: Response) => {
   const bookId = parseInt(req.params.bookId);
@@ -122,46 +125,46 @@ export async function getBooksByCategory(categoryId: number) {
 
 async function getFullBookData(
   bookId: number
-): Promise<BookResponse | { e: string }> {
+): Promise<BookResponse | undefined> {
   // Get Books data
   const bookData: Book[] = await db
     .select()
     .from(books)
     .where(eq(books.bookId, bookId));
 
-  if (!bookData[0]) return { e: "Book requested not found" };
+  if (bookData[0]) {
+    // Get Authors data
+    const authorsData: Author[] = await db
+      .select({
+        authorId: authors.authorId,
+        firstName: authors.firstName,
+        lastName: authors.lastName,
+      })
+      .from(authors)
+      .leftJoin(authorsPerBook, eq(authors.authorId, authorsPerBook.authorId))
+      .where(eq(authorsPerBook.bookId, bookId));
 
-  // Get Authors data
-  const authorsData: Author[] = await db
-    .select({
-      authorId: authors.authorId,
-      firstName: authors.firstName,
-      lastName: authors.lastName,
-    })
-    .from(authors)
-    .leftJoin(authorsPerBook, eq(authors.authorId, authorsPerBook.authorId))
-    .where(eq(authorsPerBook.bookId, bookId));
+    // Fetch Categories data
+    const categoriesData: Category[] = await db
+      .select({
+        categoryId: categories.categoryId,
+        name: categories.name,
+        parentCategoryId: categories.parentCategoryId,
+      })
+      .from(categories)
+      .leftJoin(
+        categoriesPerBook,
+        eq(categoriesPerBook.categoryId, categories.categoryId)
+      )
+      .where(eq(categoriesPerBook.bookId, bookId));
 
-  // Fetch Categories data
-  const categoriesData: Category[] = await db
-    .select({
-      categoryId: categories.categoryId,
-      name: categories.name,
-      parentCategoryId: categories.parentCategoryId,
-    })
-    .from(categories)
-    .leftJoin(
-      categoriesPerBook,
-      eq(categoriesPerBook.categoryId, categories.categoryId)
-    )
-    .where(eq(categoriesPerBook.bookId, bookId));
+    // Package results
+    return {
+      ...bookData[0],
+      authors: authorsData,
+      categories: categoriesData,
+    } as BookResponse;
+  }
 
-  // Package results
-  const result: BookResponse = {
-    ...bookData[0],
-    authors: authorsData,
-    categories: categoriesData,
-  };
-
-  return result;
+  return undefined;
 }
