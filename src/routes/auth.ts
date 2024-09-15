@@ -175,6 +175,8 @@ authRouter.post("/login", async (req: Request, res: Response) => {
     if (!user)
       return res.status(401).json({ msg: "User credentials are not valid" });
 
+    if (!user.enabled) return res.status(403).json({ msg: "user is banned" })
+
     const matchPassword = await bcrypt.compare(password, user.password);
 
     if (!matchPassword)
@@ -187,7 +189,8 @@ authRouter.post("/login", async (req: Request, res: Response) => {
     }
 
     const object = {
-      userId: user.numeroCuenta,
+      id: user.userId,
+      numeroCuenta: user.numeroCuenta,
       tipo: user.userType,
     };
 
@@ -195,7 +198,7 @@ authRouter.post("/login", async (req: Request, res: Response) => {
       expiresIn: "7d",
     });
 
-    // cambiar sameSite a strict cuando se haga a produccion y agregar secure
+    // TODO: change maxage to be just 5h
     res
       .status(200)
       .cookie("access_token", token, {
@@ -204,7 +207,7 @@ authRouter.post("/login", async (req: Request, res: Response) => {
         secure: true,
         maxAge: 7 * 24 * 60 * 60,
       })
-      .json(user);
+      .json({ numeroCuenta: user.numeroCuenta, firstName: user.firstName, secondName: user.secondName, userType: user.userType });
   } catch (error) {
     return res.status(500).json({ msg: "Error while login" });
   }

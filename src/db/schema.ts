@@ -72,6 +72,7 @@ export const users = mysqlTable("users", {
   userType: int("user_type_id").references(() => userTypes.userTypeId),
   reputation: int("reputation").references(() => reputations.reputationId),
   password: varchar("password", { length: 60 }).notNull().unique(),
+  enabled: boolean('enabled').default(true),
 });
 
 export const usersRelations = relations(users, ({ one, many }) => ({
@@ -96,8 +97,9 @@ export const books = mysqlTable("books", {
   publisher: varchar("publisher", { length: 45 }),
   language: varchar("language", { length: 15 }),
   location: varchar('location', {length: 50}),
-  isbn: varchar("isbn", { length: 13 }).unique().notNull(),
-  amount: int("amount"),
+  isbn: varchar("isbn", { length: 16 }).unique().notNull(),
+  totalAmount: int("total_amount"),
+  unitsAvailable: int('units_available'),
   enabled: boolean('enabled'),
   entryDate: date('entry_date')
 });
@@ -121,25 +123,6 @@ export const UpdateBookSchema = NewBookSchema.partial();
 // Crear esquema de búsqueda parcial para permitir solo enviar algunos campos en la búsqueda
 export const PartialGetBook = BookSchema.partial()
 
-// ejemplares
-export const copies = mysqlTable(
-  "copies",
-  {
-    copyId: int("copy_id").primaryKey().autoincrement(),
-    condition: varchar('condition', { length: 150 }),
-    state: boolean('state'),
-    bookId: int('book_id').references(() => books.bookId)
-  },
-  (table) => {
-    return {
-      parentReference: foreignKey({
-        columns: [table.bookId],
-        foreignColumns: [table.copyId],
-        name: "copy_id_fkey"
-      })
-    }
-  }
-)
 
 // Categorias
 export const categories = mysqlTable(
@@ -254,11 +237,11 @@ export const AuthorPerBookSchema = createInsertSchema(authorsPerBook);
 // Reservas
 export const reserves = mysqlTable("reserves", {
   reserveId: int("reserve_id").primaryKey().autoincrement(),
-  copyId: int("copy_id").references(() => copies.copyId),
+  bookId: int("book_id").references(() => books.bookId),
   userId: int("user_id").references(() => users.userId),
   createdAt: date("created_at"),
+  checkOutDate: date("checkout"),
   status: varchar("status", { length: 20 }),
-  notes: text("notes"),
 });
 
 export type NewReserve = typeof reserves.$inferInsert;
@@ -287,10 +270,12 @@ export const PaymentSchema = createSelectSchema(payments);
 export const loans = mysqlTable("loans", {
   loanId: int("loan_id").primaryKey().autoincrement(),
   reserveId: int("reserve_id").references(() => reserves.reserveId),
-  adminId: int("admin_id").references(() => users.userId),
+  loanAdminId: int("loan_admin_id").references(() => users.userId),
+  receptonAdminId: int('reception_admin_id').references(() => users.userId),
   loanedAt: date("loaned_at").notNull(),
   expiresOn: date("expires_on").notNull(),
-  notes: text("notes"),
+  initialNotes: text("initial_notes"),
+  finalNotes: text('final_notes'),
   state: varchar('state', { length: 50 }),
 });
 

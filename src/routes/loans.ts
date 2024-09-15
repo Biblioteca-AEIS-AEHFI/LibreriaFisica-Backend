@@ -1,11 +1,11 @@
 import { Router, type Request, type Response } from "express";
+import jwt, { type JwtPayload } from 'jsonwebtoken'
 import { db } from "../db/db";
 import { and, eq } from "drizzle-orm";
 import {
   authors,
   authorsPerBook,
   books,
-  copies,
   loans,
   reserves,
   users,
@@ -13,6 +13,7 @@ import {
 import { formatAuthorsNames } from "../utils/autoresFormat";
 import { getStudenLoans } from "../utils/loans";
 import { UserHome } from "../utils/UserHome";
+import { getToken } from "../utils/tokenInfo";
 
 export const loansRouter: Router = Router();
 
@@ -60,8 +61,9 @@ export const loansRouter: Router = Router();
  *                    type: string
  *                    example: could not get loans information
  */
-loansRouter.get("/estudiantes/:NCuenta", async (req: Request, res: Response) => {
-    const studentId = req.params.NCuenta;
+loansRouter.get("/estudiantes", async (req: Request, res: Response) => {
+    const token: any = getToken(req)
+    const studentId = token?.numeroCuenta;
     try {
       const studentName: string = (await db.select().from(users).where(eq(users.numeroCuenta, studentId)))[0].firstName;
       const loans = await getStudenLoans(studentId);

@@ -17,5 +17,3 @@ export interface categoryFormat {
   icon: string | null,
   children: Array<categoryFormat>
 }
-
-
