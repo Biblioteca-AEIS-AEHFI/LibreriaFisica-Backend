@@ -5,7 +5,6 @@ import {
   authorsPerBook,
   books,
   categoriesPerBook,
-  copies,
   loans,
   reserves,
   users,
@@ -22,8 +21,8 @@ export class UserHome {
       })
       .from(loans)
       .leftJoin(reserves, eq(loans.reserveId, reserves.reserveId))
-      .leftJoin(copies, eq(reserves.copyId, copies.copyId))
-      .leftJoin(categoriesPerBook, eq(copies.bookId, categoriesPerBook.bookId))
+      .leftJoin(books, eq(reserves.bookId, books.bookId))
+      .leftJoin(categoriesPerBook, eq(books.bookId, categoriesPerBook.bookId))
       .leftJoin(users, eq(reserves.userId, users.userId))
       .where(eq(users.numeroCuenta, numeroCuenta))
       .groupBy(categoriesPerBook.categoryId)
@@ -72,8 +71,8 @@ export class UserHome {
       })
       .from(loans)
       .leftJoin(reserves, eq(loans.reserveId, reserves.reserveId))
-      .leftJoin(copies, eq(reserves.copyId, copies.copyId))
-      .leftJoin(categoriesPerBook, eq(copies.bookId, categoriesPerBook.bookId))
+      .leftJoin(books, eq(reserves.bookId, books.bookId))
+      .leftJoin(categoriesPerBook, eq(books.bookId, categoriesPerBook.bookId))
       .leftJoin(users, eq(reserves.userId, users.userId))
       .groupBy(categoriesPerBook.categoryId)
       .orderBy(count(categoriesPerBook.categoryId))
@@ -118,8 +117,7 @@ export class UserHome {
       const results = await db
       .selectDistinct()
       .from(reserves)
-      .leftJoin(copies, eq(reserves.copyId, copies.copyId)) 
-      .leftJoin(books, eq(copies.bookId, books.bookId))
+      .leftJoin(books, eq(reserves.bookId, books.bookId))
       .leftJoin(authorsPerBook, eq(books.bookId, authorsPerBook.bookId))
       .leftJoin(authors, eq(authorsPerBook.authorId, authors.authorId))
 

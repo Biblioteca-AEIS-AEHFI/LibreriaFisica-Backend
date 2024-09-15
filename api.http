@@ -1,8 +1,9 @@
+### login
 POST http://localhost:3000/auth/login
 Content-Type: application/json
 
 {
-  "numeroCuenta": "20221001806",
+  "numeroCuenta": "0987654321",
   "password": "password"
 }
 
@@ -97,4 +98,4 @@ Content-Type: application/json
 }
 
 ### obtiene info para home
-GET http://localhost:3000/prestamos/estudiantes/1234567890
+GET http://localhost:3000/prestamos/estudiantes

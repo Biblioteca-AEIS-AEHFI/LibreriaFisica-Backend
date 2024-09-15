@@ -44,7 +44,7 @@ app.get("/api/v1/docs.json", (req: Request, res: Response) => {
 });
 
 
-//app.use(verifyToken);
+app.use(verifyToken);
 app.use("/prestamos", loansRouter)
 app.use("/user", userRouter);
 app.use('/search', searchRouter)

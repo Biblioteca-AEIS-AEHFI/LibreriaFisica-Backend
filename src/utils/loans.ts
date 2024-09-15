@@ -4,7 +4,6 @@ import {
   books,
   reserves,
   authors,
-  copies,
   users,
   authorsPerBook,
 } from "../db/schema";
@@ -22,8 +21,7 @@ export async function getStudenLoans(numeroCuenta: string) {
       .from(loans)
       .leftJoin(reserves, eq(loans.reserveId, reserves.reserveId))
       .leftJoin(users, eq(reserves.userId, users.userId))
-      .leftJoin(copies, eq(reserves.copyId, copies.copyId))
-      .leftJoin(books, eq(copies.bookId, books.bookId))
+      .leftJoin(books, eq(reserves.bookId, books.bookId))
       .leftJoin(authorsPerBook, eq(books.bookId, authorsPerBook.bookId))
       .leftJoin(authors, eq(authorsPerBook.authorId, authors.authorId))
       .where(and(eq(users.numeroCuenta, numeroCuenta), eq(loans.state, STATE)));
