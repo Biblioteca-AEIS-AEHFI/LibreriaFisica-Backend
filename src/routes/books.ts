@@ -4,7 +4,6 @@ import { z, ZodError } from "zod";
 import { db } from "../db/db";
 import {
   books,
-  copies,
   reserves,
   loans,
   categoriesPerBook,
@@ -446,7 +445,7 @@ book.patch("/update/:bookId", async (req: Request, res: Response) => {
           publisher: bookData.publisher,
           language: bookData.language,
           isbn: bookData.isbn,
-          amount: bookData.amount,
+          totalAmount: bookData.totalAmount,
         })
         .where(eq(books.bookId, bookId));
 
@@ -468,7 +467,8 @@ book.patch("/update/:bookId", async (req: Request, res: Response) => {
  *    delete:
  *      tags:
  *        - Books
- *      summary: Delete a book by ID
+ *      summary: Delete a book by ID, including related records
+ *      description: Deletes a book from the database using the provided book ID. This also removes any related records associated with the book, such as reviews or references.
  *      parameters:
  *        - name: bookId
  *          in: path
@@ -476,10 +476,10 @@ book.patch("/update/:bookId", async (req: Request, res: Response) => {
  *          schema:
  *            type: number
  *            example: 1
- *          description: The ID of the book to delete
+ *          description: The unique identifier of the book to be deleted
  *      responses:
  *        200:
- *          description: Book deleted successfully
+ *          description: Book and related records deleted successfully
  *          content:
  *            application/json:
  *              schema:
@@ -487,7 +487,7 @@ book.patch("/update/:bookId", async (req: Request, res: Response) => {
  *                properties:
  *                  message:
  *                    type: string
- *                    example: Book with id: 1 deleted successfully
+ *                    example: Book with id: 1 and related records deleted successfully
  *        404:
  *          description: Book not found
  *          content:
@@ -499,7 +499,7 @@ book.patch("/update/:bookId", async (req: Request, res: Response) => {
  *                    type: string
  *                    example: Book not found
  *        500:
- *          description: Server error
+ *          description: Internal server error occurred while deleting the book and related records
  *          content:
  *            application/json:
  *              schema:
@@ -528,13 +528,7 @@ book.delete("/:bookId", async (req: Request, res: Response) => {
       // Eliminar reservas relacionadas
       await trx
         .delete(reserves)
-        .where(inArray(
-          reserves.copyId, 
-          trx.select({ 
-            copyId: copies.copyId 
-          })
-          .from(copies)
-          .where(eq(copies.bookId, bookId))));
+        .where(eq(reserves.bookId, bookId));
 
       // Eliminar préstamos relacionados
       await trx
@@ -545,18 +539,8 @@ book.delete("/:bookId", async (req: Request, res: Response) => {
             reserveId: reserves.reserveId 
           })
           .from(reserves)
-          .where(inArray(
-            reserves.copyId,
-            trx.select({
-              copyId: copies.copyId 
-            })
-            .from(copies)
-            .where(eq(copies.bookId, bookId))))));
-
-      // Eliminar copias relacionadas
-      await trx
-        .delete(copies)
-        .where(eq(copies.bookId, bookId));
+          .where(eq(reserves.bookId, bookId))
+        ));
 
       // Finalmente, eliminar el libro
       await trx.delete(books).where(eq(books.bookId, bookId));
@@ -868,106 +852,101 @@ book.post("/categories", async (req: Request, res: Response) => {
 // Obteniendo información detallada de un libro
 /**
  * @openapi
- *  /books/bookdetail/{bookId}:
- *    get:
- *      tags:
- *        - Books
- *      summary: Get detailed information about a specific book
- *      parameters:
- *        - name: bookId
- *          in: path
- *          required: true
- *          description: ID of the book to fetch details for
- *          schema:
- *            type: integer
- *            example: 1
- *      responses:
- *        200:
- *          description: Book details retrieved successfully
- *          content:
- *            application/json:
- *              schema:
- *                type: object
- *                properties:
- *                  message:
- *                    type: string
- *                    example: "Book fetched successfully"
- *                  data:
- *                    type: object
- *                    properties:
- *                      bookId:
- *                        type: integer
- *                        example: 1
- *                      title:
- *                        type: string
- *                        example: "Fisica para ingeniería"
- *                      description:
- *                        type: string
- *                        example: "A book on engineering physics"
- *                      edition:
- *                        type: integer
- *                        example: 10
- *                      year:
- *                        type: integer
- *                        example: 2017
- *                      publisher:
- *                        type: string
- *                        example: "McGraw-Hill"
- *                      language:
- *                        type: string
- *                        example: "Spanish"
- *                      isbn:
- *                        type: string
- *                        example: "978-3-16-148410-0"
- *                      booksAvailable:
- *                        type: integer
- *                        example: 5
- *                      borrowedBooks:
- *                        type: integer
- *                        example: 3
- *                      authors:
- *                        type: string
- *                        example: "John Doe, Jane Smith"
- *                      category:
- *                        type: string
- *                        example: "Engineering"
- *                      similarBooks:
- *                        type: array
- *                        items:
- *                          type: object
- *                          properties:
- *                            bookId:
- *                              type: integer
- *                              example: 2
- *                            isbn:
- *                              type: string
- *                              example: "978-3-16-148410-1"
- *                            title:
- *                              type: string
- *                              example: "Mathematics for Engineers"
- *                            authors:
- *                              type: string
- *                              example: "John Doe, Richard Roe"
- *        404:
- *          description: Book not found
- *          content:
- *            application/json:
- *              schema:
- *                type: object
- *                properties:
- *                  message:
- *                    type: string
- *                    example: "Book not found"
- *        500:
- *          description: Server error
- *          content:
- *            application/json:
- *              schema:
- *                type: object
- *                properties:
- *                  message:
- *                    type: string
- *                    example: "Error searching book"
+ * /bookdetail/{bookId}:
+ *   get:
+ *     tags:
+ *       - Books
+ *     summary: Get details of a book by ID
+ *     description: Retrieve detailed information about a book, including its authors, category, and a list of similar books.
+ *     parameters:
+ *       - name: bookId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: number
+ *           example: 1
+ *         description: The ID of the book to retrieve.
+ *     responses:
+ *       200:
+ *         description: Book details fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Book fetched successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     bookId:
+ *                       type: number
+ *                       example: 1
+ *                     title:
+ *                       type: string
+ *                       example: "The Great Gatsby"
+ *                     description:
+ *                       type: string
+ *                       example: "A novel written by F. Scott Fitzgerald"
+ *                     edition:
+ *                       type: string
+ *                       example: "First Edition"
+ *                     year:
+ *                       type: number
+ *                       example: 1925
+ *                     publisher:
+ *                       type: string
+ *                       example: "Charles Scribner's Sons"
+ *                     language:
+ *                       type: string
+ *                       example: "English"
+ *                     isbn:
+ *                       type: string
+ *                       example: "978-0743273565"
+ *                     authors:
+ *                       type: string
+ *                       example: "F. Scott Fitzgerald"
+ *                     category:
+ *                       type: string
+ *                       example: "Classic Fiction"
+ *                     similarBooks:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           bookId:
+ *                             type: number
+ *                             example: 2
+ *                           isbn:
+ *                             type: string
+ *                             example: "978-0141182636"
+ *                           title:
+ *                             type: string
+ *                             example: "To Kill a Mockingbird"
+ *                           authors:
+ *                             type: string
+ *                             example: "Harper Lee"
+ *       404:
+ *         description: Book not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Book not found
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Error searching book
  */
 book.get("/bookdetail/:bookId", async (req: Request, res: Response) => {
   const { bookId } = validateSchema(idBookSchema, req.params, res) || {};
@@ -991,25 +970,6 @@ book.get("/bookdetail/:bookId", async (req: Request, res: Response) => {
     if (book.length === 0) {
       return res.status(404).json({ message: "Book not found" });
     }
-
-    // Contar la cantidad de copias disponibles (state = true)
-    const availableCopiesCount = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(copies)
-      .where(
-        eq(copies.bookId, bookId) &&
-        eq(copies.state, true) // Disponibilidad de las copias
-      )
-      .then((result) => result[0]?.count || 0);
-
-    // Contar la cantidad de copias prestadas (ejemplo: `state` podría ser "prestado" o `loans` asociados a las copias)
-    const borrowedCopiesCount = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(loans)
-      .innerJoin(reserves, eq(loans.reserveId, reserves.reserveId))
-      .innerJoin(copies, eq(reserves.copyId, copies.copyId))
-      .where(eq(copies.bookId, bookId))
-      .then((result) => result[0]?.count || 0);
 
     // Obtener lista de autores del libro
     const authorsIdList: any = await db
@@ -1048,11 +1008,8 @@ book.get("/bookdetail/:bookId", async (req: Request, res: Response) => {
       .innerJoin(authorsPerBook, eq(books.bookId, authorsPerBook.bookId))
       .where(
         categoryId !== undefined && categoryId !== null
-          ?
-              eq(categoriesPerBook.categoryId, categoryId) // Libros de la misma categoría
-              ||
-              inArray(authorsPerBook.authorId, authorsList.map(author => author.authorId)) // Libros del mismo autor
-            
+          ? eq(categoriesPerBook.categoryId, categoryId) // Libros de la misma categoría
+            || inArray(authorsPerBook.authorId, authorsList.map(author => author.authorId)) // Libros del mismo autor
           : inArray(authorsPerBook.authorId, authorsList.map(author => author.authorId)) // Solo por autor si no hay categoría
       )
       .limit(13); // Limita los resultados a 13
@@ -1081,8 +1038,6 @@ book.get("/bookdetail/:bookId", async (req: Request, res: Response) => {
       message: "Book fetched successfully",
       data: {
         ...book[0],
-        booksAvailable: availableCopiesCount,
-        borrowedBooks: borrowedCopiesCount,
         authors: authorsList.map(author => `${author.firstName} ${author.lastName}`).join(', '),
         category: category[0]?.name || null, // Agrega la categoría
         similarBooks: similarBooksWithAuthors // Libros similares con autores
