@@ -2,9 +2,11 @@ import { Router, type Request, type Response } from "express";
 import { eq, sql, inArray } from "drizzle-orm";
 import { z, ZodError } from "zod";
 import { db } from "../db/db";
+import jwt from 'jsonwebtoken';
 import {
   books,
   reserves,
+  users,
   loans,
   categoriesPerBook,
   BookSchema,
@@ -856,19 +858,18 @@ book.post("/categories", async (req: Request, res: Response) => {
  *   get:
  *     tags:
  *       - Books
- *     summary: Get details of a book by ID
- *     description: Retrieve detailed information about a book, including its authors, category, and a list of similar books.
+ *     summary: Retrieve details of a book including its reservation status
  *     parameters:
  *       - name: bookId
  *         in: path
  *         required: true
  *         schema:
- *           type: number
+ *           type: integer
  *           example: 1
- *         description: The ID of the book to retrieve.
+ *         description: The ID of the book to retrieve details for
  *     responses:
  *       200:
- *         description: Book details fetched successfully
+ *         description: Book details retrieved successfully
  *         content:
  *           application/json:
  *             schema:
@@ -881,54 +882,57 @@ book.post("/categories", async (req: Request, res: Response) => {
  *                   type: object
  *                   properties:
  *                     bookId:
- *                       type: number
+ *                       type: integer
  *                       example: 1
  *                     title:
  *                       type: string
- *                       example: "The Great Gatsby"
+ *                       example: "Sample Book Title"
  *                     description:
  *                       type: string
- *                       example: "A novel written by F. Scott Fitzgerald"
+ *                       example: "A brief description of the book."
  *                     edition:
  *                       type: string
  *                       example: "First Edition"
  *                     year:
- *                       type: number
- *                       example: 1925
+ *                       type: integer
+ *                       example: 2024
  *                     publisher:
  *                       type: string
- *                       example: "Charles Scribner's Sons"
+ *                       example: "Sample Publisher"
  *                     language:
  *                       type: string
  *                       example: "English"
  *                     isbn:
  *                       type: string
- *                       example: "978-0743273565"
+ *                       example: "978-3-16-148410-0"
  *                     authors:
  *                       type: string
- *                       example: "F. Scott Fitzgerald"
+ *                       example: "Author One, Author Two"
  *                     category:
  *                       type: string
- *                       example: "Classic Fiction"
+ *                       example: "Fiction"
  *                     similarBooks:
  *                       type: array
  *                       items:
  *                         type: object
  *                         properties:
  *                           bookId:
- *                             type: number
+ *                             type: integer
  *                             example: 2
  *                           isbn:
  *                             type: string
- *                             example: "978-0141182636"
+ *                             example: "978-1-23-456789-0"
  *                           title:
  *                             type: string
- *                             example: "To Kill a Mockingbird"
+ *                             example: "Another Sample Book Title"
  *                           authors:
  *                             type: string
- *                             example: "Harper Lee"
- *       404:
- *         description: Book not found
+ *                             example: "Author Three, Author Four"
+ *                     isReserved:
+ *                       type: boolean
+ *                       example: true
+ *       401:
+ *         description: Unauthorized access, invalid or missing token
  *         content:
  *           application/json:
  *             schema:
@@ -936,7 +940,17 @@ book.post("/categories", async (req: Request, res: Response) => {
  *               properties:
  *                 message:
  *                   type: string
- *                   example: Book not found
+ *                   example: "Authorization token required"
+ *       404:
+ *         description: Book or user not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Book not found" or "User not found"
  *       500:
  *         description: Server error
  *         content:
@@ -946,13 +960,39 @@ book.post("/categories", async (req: Request, res: Response) => {
  *               properties:
  *                 message:
  *                   type: string
- *                   example: Error searching book
+ *                   example: "Error searching book"
  */
 book.get("/bookdetail/:bookId", async (req: Request, res: Response) => {
   const { bookId } = validateSchema(idBookSchema, req.params, res) || {};
   if (bookId === undefined) return;
 
   try {
+    // Extraer el token de autorización y verificarlo
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) {
+      return res.status(401).json({ message: "Authorization token required" });
+    }
+    
+    // Verificar y decodificar el token
+    const decodedToken = jwt.verify(token, process.env.JWT_SECRET!);
+    const userId = (decodedToken as any).userId;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Invalid token" });
+    }
+
+    // Obtener el número de cuenta del usuario
+    const user = await db
+      .select({ numeroCuenta: users.numeroCuenta })
+      .from(users)
+      .where(eq(users.userId, userId));
+
+    if (user.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const numeroCuenta = user[0].numeroCuenta;
+
     // Obtener la información básica del libro
     const book = await db.select({
       bookId: books.bookId,
@@ -970,6 +1010,18 @@ book.get("/bookdetail/:bookId", async (req: Request, res: Response) => {
     if (book.length === 0) {
       return res.status(404).json({ message: "Book not found" });
     }
+
+    // Verificar si el usuario ha reservado este libro
+  const isReserved = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(reserves)
+    .innerJoin(users, eq(reserves.userId, users.userId)) // Relacionar con la tabla de usuarios
+    .where(
+      eq(reserves.bookId, bookId) &&
+      (numeroCuenta ? eq(users.numeroCuenta, numeroCuenta) : sql`1 = 0`) // Si numeroCuenta es null, evita la comparación
+    )
+    .then((result) => result[0]?.count > 0); // Si hay al menos una reserva, isReserved es true
+
 
     // Obtener lista de autores del libro
     const authorsIdList: any = await db
@@ -991,12 +1043,10 @@ book.get("/bookdetail/:bookId", async (req: Request, res: Response) => {
       .from(categoriesPerBook)
       .innerJoin(categories, eq(categoriesPerBook.categoryId, categories.categoryId))
       .where(eq(categoriesPerBook.bookId, bookId))
-      .limit(1); // Obtiene solo la primera categoría
+      .limit(1);
 
-    // Obtén el ID de la categoría si existe
+    // Obtener libros similares
     const categoryId = category[0]?.categoryId;
-
-    // Construye la consulta para obtener libros similares
     const similarBooksQuery = db
       .select({
         bookId: books.bookId,
@@ -1008,39 +1058,44 @@ book.get("/bookdetail/:bookId", async (req: Request, res: Response) => {
       .innerJoin(authorsPerBook, eq(books.bookId, authorsPerBook.bookId))
       .where(
         categoryId !== undefined && categoryId !== null
-          ? eq(categoriesPerBook.categoryId, categoryId) // Libros de la misma categoría
-            || inArray(authorsPerBook.authorId, authorsList.map(author => author.authorId)) // Libros del mismo autor
-          : inArray(authorsPerBook.authorId, authorsList.map(author => author.authorId)) // Solo por autor si no hay categoría
+          ? eq(categoriesPerBook.categoryId, categoryId) ||
+            inArray(authorsPerBook.authorId, authorsList.map((author) => author.authorId))
+          : inArray(authorsPerBook.authorId, authorsList.map((author) => author.authorId))
       )
-      .limit(13); // Limita los resultados a 13
+      .limit(13);
 
     const similarBooks = await similarBooksQuery;
 
     // Obtener autores para libros similares
-    const similarBooksWithAuthors = await Promise.all(similarBooks.map(async (book) => {
-      const similarBookAuthors: any = await db
-        .select({ authorId: authorsPerBook.authorId })
-        .from(authorsPerBook)
-        .where(eq(authorsPerBook.bookId, book.bookId));
+    const similarBooksWithAuthors = await Promise.all(
+      similarBooks.map(async (book) => {
+        const similarBookAuthors: any = await db
+          .select({ authorId: authorsPerBook.authorId })
+          .from(authorsPerBook)
+          .where(eq(authorsPerBook.bookId, book.bookId));
 
-      const authorsForSimilarBook = await db
-        .select()
-        .from(authors)
-        .where(inArray(authors.authorId, similarBookAuthors));
+        const authorsForSimilarBook = await db
+          .select()
+          .from(authors)
+          .where(inArray(authors.authorId, similarBookAuthors));
 
-      return {
-        ...book,
-        authors: authorsForSimilarBook.map(author => `${author.firstName} ${author.lastName}`).join(', ')
-      };
-    }));
+        return {
+          ...book,
+          authors: authorsForSimilarBook
+            .map((author) => `${author.firstName} ${author.lastName}`)
+            .join(", "),
+        };
+      })
+    );
 
     res.status(200).json({
       message: "Book fetched successfully",
       data: {
         ...book[0],
-        authors: authorsList.map(author => `${author.firstName} ${author.lastName}`).join(', '),
-        category: category[0]?.name || null, // Agrega la categoría
-        similarBooks: similarBooksWithAuthors // Libros similares con autores
+        authors: authorsList.map((author) => `${author.firstName} ${author.lastName}`).join(", "),
+        category: category[0]?.name || null,
+        similarBooks: similarBooksWithAuthors,
+        isReserved: isReserved, 
       }
     });
   } catch (error) {
