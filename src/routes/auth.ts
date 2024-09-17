@@ -1,4 +1,10 @@
 import { Router, type Request, type Response } from "express";
+import {
+  NewUserSchema,
+  users,
+  type NewUser,
+  type User,
+} from "../db/schema/users";
 import { NewUserSchema, users, type NewUser, type User } from "../db/schema";
 import { loginSchema } from "../utils/definitions";
 import { db } from "../db/db";
@@ -169,7 +175,7 @@ authRouter.post("/login", async (req: Request, res: Response) => {
     const userQuery: User[] | any = await db
       .select()
       .from(users)
-      .where(eq(users.numeroCuenta, numeroCuenta));
+      .where(eq(users.account, numeroCuenta));
 
     const user: User = userQuery[0];
     if (!user)

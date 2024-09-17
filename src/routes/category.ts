@@ -1,18 +1,17 @@
 import { Router, type Request, type Response } from "express";
 import {
   type Category,
-  type NewCategory,
   categories,
-  CategorySchema,
   NewCategorySchema,
   categoriesPerBook,
 } from "../db/schema";
 import { db } from "../db/db";
-import { eq, or, and } from "drizzle-orm";
+import { eq, or, and, isNull } from "drizzle-orm";
 import { saveChildren } from "../utils/categories";
 import { categorySchema, type categoryFormat } from "../utils/definitions";
+import { getBooksByCategory } from "./book";
 
-export const categoryRouter: Router = Router();
+export const categoriesRouter: Router = Router();
 
 // get categories
 /**
@@ -74,7 +73,7 @@ export const categoryRouter: Router = Router();
  *          example: 1
  *
  */
-categoryRouter.get("/", async (req: Request, res: Response) => {
+categoriesRouter.get("/", async (req: Request, res: Response) => {
   try {
     const categoriesList: Array<Category> = await db.select().from(categories);
     return res.status(200).json({
@@ -129,7 +128,7 @@ categoryRouter.get("/", async (req: Request, res: Response) => {
  *                      example: error while handling categories
  *
  */
-categoryRouter.get("/all", async (req: Request, res: Response) => {
+categoriesRouter.get("/all", async (req: Request, res: Response) => {
   try {
     const categoriesList: Array<Category> = await db
       .select()
@@ -208,7 +207,7 @@ categoryRouter.get("/all", async (req: Request, res: Response) => {
  *                    example: 0
  */
 
-categoryRouter.delete("/delete/:id", async (req: Request, res: Response) => {
+categoriesRouter.delete("/delete/:id", async (req: Request, res: Response) => {
   const categoryId = Number(req.params.id);
   //const token = req.cookies?.access_token;
   try {
@@ -331,7 +330,7 @@ categoryRouter.delete("/delete/:id", async (req: Request, res: Response) => {
  *                    example: category could not be updated
  */
 
-categoryRouter.put("/update", async (req: Request, res: Response) => {
+categoriesRouter.put("/update", async (req: Request, res: Response) => {
   //const token = req.cookies?.access_token;
   try {
     //if (token?.tipo != 1)
@@ -351,19 +350,22 @@ categoryRouter.put("/update", async (req: Request, res: Response) => {
         icon: categoryObj.icon,
         parentCategoryId: categoryObj.parentCategoryId,
       })
-      .where(and(eq(categories.categoryId, categoryObj.categoryId), eq(categories.enabled, true)));
+      .where(
+        and(
+          eq(categories.categoryId, categoryObj.categoryId),
+          eq(categories.enabled, true)
+        )
+      );
     const categoryUpdated: Category = (
       await db
         .select()
         .from(categories)
         .where(eq(categories.categoryId, categoryObj.categoryId))
     )[0];
-    return res
-      .status(200)
-      .json({
-        message: "category updated successfully",
-        data: categoryUpdated,
-      });
+    return res.status(200).json({
+      message: "category updated successfully",
+      data: categoryUpdated,
+    });
   } catch (err) {
     return res.status(500).json({ message: "could not update category" });
   }
@@ -418,7 +420,7 @@ categoryRouter.put("/update", async (req: Request, res: Response) => {
  *                    example: error while handling categories with id
  *
  */
-categoryRouter.get("/:id", async (req: Request, res: Response) => {
+categoriesRouter.get("/:id", async (req: Request, res: Response) => {
   const numberRegex = /^\d+$/;
   const id: string = req.params.id;
   if (!numberRegex.test(id))
@@ -491,7 +493,7 @@ categoryRouter.get("/:id", async (req: Request, res: Response) => {
  *                    example: error while handling categories with id
  *
  */
-categoryRouter.get(
+categoriesRouter.get(
   "/especialidad/:name",
   async (req: Request, res: Response) => {
     const categoryName: string = req.params.name;
@@ -548,7 +550,7 @@ categoryRouter.get(
  *                icon:
  *                  type: string
  *                  example: ecuacionesDiferenciales.svg
- * 
+ *
  *       responses:
  *        200:
  *          description: OK
@@ -566,7 +568,7 @@ categoryRouter.get(
  *                  data:
  *                    type: object
  *                    example: { name: ecuaciones diferenciales, categoryId: 6, parentCategoryId: 1, icon: ecuacionesDiferenciales.svg, enabled: true }
- * 
+ *
  *
  *        5xx:
  *          description: FAILED
@@ -581,18 +583,24 @@ categoryRouter.get(
  *                    type: string
  *                    example: error while handling category
  */
-categoryRouter.post("/create", async (req: Request, res: Response) => {
+categoriesRouter.post("/create", async (req: Request, res: Response) => {
   try {
-    const validCategory: boolean = categorySchema.safeParse(
-      req.body
-    ).success;
+    const validCategory: boolean = categorySchema.safeParse(req.body).success;
     if (!validCategory)
       return res
         .status(400)
         .json({ message: "Invalid category parameters", data: [] });
 
     const returningId: number = (
-      await db.insert(categories).values({ name: req.body.name, parentCategoryId: req.body.parentCategoryId, icon: req.body.icon, enabled: true }).$returningId()
+      await db
+        .insert(categories)
+        .values({
+          name: req.body.name,
+          parentCategoryId: req.body.parentCategoryId,
+          icon: req.body.icon,
+          enabled: true,
+        })
+        .$returningId()
     )[0].categoryId;
     const categoryCreated = await db
       .select()
@@ -654,7 +662,7 @@ categoryRouter.post("/create", async (req: Request, res: Response) => {
  *                      example: error while trying to delete category
  *
  */
-categoryRouter.delete("/:id", async (req: Request, res: Response) => {
+categoriesRouter.delete("/:id", async (req: Request, res: Response) => {
   const numberRegex = /^\d+$/;
   const id: string = req.params.id;
   if (!numberRegex.test(id))
@@ -728,7 +736,7 @@ categoryRouter.delete("/:id", async (req: Request, res: Response) => {
  *                      example: error while deleting category
  *
  */
-categoryRouter.delete(
+categoriesRouter.delete(
   "/categoria/:name",
   async (req: Request, res: Response) => {
     const name: string = req.params.name;
@@ -746,5 +754,155 @@ categoryRouter.delete(
     } catch (err) {
       return res.status(500).json({ message: "error while deleting category" });
     }
+  }
+);
+
+/**
+ *
+ *@openapi
+ * /category/parents:
+ *  get:
+ *    tags:
+ *      - Cateogories
+ *    summary: get parent categories
+ *    responses:
+ *      200:
+ *        description: OK
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                message:
+ *                  type: Category[]
+ *                  properties:
+ *                    categoryId:
+ *                      type: number
+ *                    parentCategoryId:
+ *                      type: number | null
+ *                    name:
+ *                      type: string
+ *      500:
+ *        description: FAILED
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              required:
+ *                - message
+ *              properties:
+ *                message:
+ *                  type: string
+ */
+
+categoriesRouter.get("/parents", async (req: Request, res: Response) => {
+  const parentCategories: Category[] = await db
+    .select()
+    .from(categories)
+    .where(isNull(categories.parentCategoryId));
+
+  if (parentCategories.length > 0)
+    return res.status(200).json(parentCategories);
+
+  return res.status(500).json({ e: "No parent categories found" });
+});
+
+/**
+ *
+ *@openapi
+ * /category/children/{parentCategoryId}:
+ *  get:
+ *    tags:
+ *      - Cateogories
+ *    summary: get children categories and books associated to a parent category
+ *    responses:
+ *      200:
+ *        description: OK
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                books:
+ *                  type: Book[]
+ *                  properties:
+ *                    bookId:
+ *                      type: number
+ *                    title:
+ *                      type: string
+ *                    description:
+ *                      type: string
+ *                    edition:
+ *                       type: number
+ *                    year:
+ *                        type: number
+ *                    publisher:
+ *                        type: string
+ *                    language:
+ *                      type: string
+ *                    isbn:
+ *                      type: string
+ *                    amount:
+ *                      type: number
+ *                childrenCategories:
+ *                  type: Category[]
+ *                  properties:
+ *                    categoryId:
+ *                      type: number
+ *                    parentCategoryId:
+ *                      type: number
+ *                    name:
+ *                      type: string
+ *      404:
+ *        description: Parent Category not found
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              required:
+ *                - message
+ *              properties:
+ *                message:
+ *                  type: string
+ *
+ *      500:
+ *        description: FAILED
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              required:
+ *                - message
+ *              properties:
+ *                message:
+ *                  type: string
+ */
+
+categoriesRouter.get(
+  "/children/:parentCategoryId",
+  async (req: Request, res: Response) => {
+    const parentCategoryId = parseInt(req.params.parentCategoryId);
+
+    // Verify for category existance
+    const result = await db
+      .select()
+      .from(categories)
+      .where(eq(categories.categoryId, parentCategoryId));
+
+    if (!result[0]) {
+      return res.status(404).json({ e: "Parent Category does not exist" });
+    }
+
+    // Fetch children categories and books corresponding to the parent category specified
+    const categoryBooks = await getBooksByCategory(parentCategoryId);
+    const childrenCategories = await db
+      .select()
+      .from(categories)
+      .where(eq(categories.parentCategoryId, parentCategoryId));
+
+    return res.status(200).json({
+      books: categoryBooks,
+      childrenCategories: childrenCategories,
+    });
   }
 );
