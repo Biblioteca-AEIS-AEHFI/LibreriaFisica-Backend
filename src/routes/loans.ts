@@ -1,17 +1,8 @@
 import { Router, type Request, type Response } from "express";
-import jwt, { type JwtPayload } from 'jsonwebtoken'
 import { db } from "../db/db";
-import { and, eq } from "drizzle-orm";
-import {
-  authors,
-  authorsPerBook,
-  books,
-  loans,
-  reserves,
-  users,
-} from "../db/schema";
-import { formatAuthorsNames } from "../utils/autoresFormat";
-import { getStudenLoans } from "../utils/loans";
+import { eq } from "drizzle-orm";
+import { users } from "../db/schema";
+import { getCheckoutDateNum, getStudenLoans } from "../utils/loans";
 import { UserHome } from "../utils/UserHome";
 import { getToken } from "../utils/tokenInfo";
 
@@ -19,16 +10,11 @@ export const loansRouter: Router = Router();
 
 /**
  *@openapi
- *'/prestamos/estudiantes/{numeroCuenta}':
+ * /prestamos/estudiantes:
  *  get:
  *    tags:
  *      - Prestamos
  *    summary: Responde con un arreglo sobre los prestamos, libros populares, libros mas reservados por usuario, libros reservados por usuarios, libros con categorias mas solicitados etc, de un estudiante
- *    parameters:
- *      - name: numeroCuenta
- *        in: path
- *        description: numeroCuenta del estudiante
- *        required: true
  *    responses:
  *        200:
  *            description: OK
@@ -65,7 +51,7 @@ loansRouter.get("/estudiantes", async (req: Request, res: Response) => {
     const token: any = getToken(req)
     const studentId = token?.numeroCuenta;
     try {
-      const studentName: string = (await db.select().from(users).where(eq(users.numeroCuenta, studentId)))[0].firstName;
+      const studentName = token.firstName
       const loans = await getStudenLoans(studentId);
       const recommended = await UserHome.getRecommendedBooksByMostUserLoans(studentId);
       const popularBooks = await UserHome.getPopularBooks();
@@ -91,3 +77,5 @@ loansRouter.get("/estudiantes", async (req: Request, res: Response) => {
     }
   }
 );
+
+
