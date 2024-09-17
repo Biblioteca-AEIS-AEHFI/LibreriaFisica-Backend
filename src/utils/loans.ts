@@ -65,3 +65,11 @@ export async function getStudenLoans(numeroCuenta: string) {
     return [];
   }
 }
+
+
+export function getCheckoutDateNum(currentDayNum: number) {
+  if (currentDayNum >= 0 && currentDayNum <= 4) 
+    return 1
+
+  return (currentDayNum == 5 ? 3 : 2)
+}

@@ -8,7 +8,6 @@ import {
 import { NewUserSchema, users, type NewUser, type User } from "../db/schema";
 import { loginSchema } from "../utils/definitions";
 import { db } from "../db/db";
-
 import { eq } from "drizzle-orm";
 import { ZodError } from "zod";
 import * as jwt from "jsonwebtoken";
@@ -195,6 +194,7 @@ authRouter.post("/login", async (req: Request, res: Response) => {
     }
 
     const object = {
+      firstName: user.firstName,
       id: user.userId,
       numeroCuenta: user.numeroCuenta,
       tipo: user.userType,

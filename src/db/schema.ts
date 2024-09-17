@@ -98,8 +98,8 @@ export const books = mysqlTable("books", {
   language: varchar("language", { length: 15 }),
   location: varchar('location', {length: 50}),
   isbn: varchar("isbn", { length: 16 }).unique().notNull(),
-  totalAmount: int("total_amount"),
-  unitsAvailable: int('units_available'),
+  totalAmount: int("total_amount").notNull(),
+  unitsAvailable: int('units_available').notNull(),
   enabled: boolean('enabled'),
   entryDate: date('entry_date')
 });
