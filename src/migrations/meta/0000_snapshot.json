@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "0c685b69-5c89-4c98-9d82-425e780e047c",
+  "id": "6f625843-d0ca-4028-89da-36c51d3d7d14",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "authors": {
@@ -134,7 +134,11 @@
           "name": "edition",
           "type": "int",
           "primaryKey": false,
+<<<<<<< HEAD
           "notNull": false,
+=======
+          "notNull": true,
+>>>>>>> crud
           "autoincrement": false
         },
         "year": {
@@ -146,7 +150,11 @@
         },
         "publisher": {
           "name": "publisher",
+<<<<<<< HEAD
           "type": "varchar(30)",
+=======
+          "type": "varchar(45)",
+>>>>>>> crud
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -158,19 +166,61 @@
           "notNull": false,
           "autoincrement": false
         },
+<<<<<<< HEAD
         "isbn": {
           "name": "isbn",
           "type": "varchar(13)",
+=======
+        "location": {
+          "name": "location",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "isbn": {
+          "name": "isbn",
+          "type": "varchar(16)",
+>>>>>>> crud
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
+<<<<<<< HEAD
         "amount": {
           "name": "amount",
+=======
+        "total_amount": {
+          "name": "total_amount",
+>>>>>>> crud
           "type": "int",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
+<<<<<<< HEAD
+=======
+        },
+        "units_available": {
+          "name": "units_available",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "enabled": {
+          "name": "enabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "entry_date": {
+          "name": "entry_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+>>>>>>> crud
         }
       },
       "indexes": {},
@@ -215,6 +265,23 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
+<<<<<<< HEAD
+=======
+        },
+        "icon": {
+          "name": "icon",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "enabled": {
+          "name": "enabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+>>>>>>> crud
         }
       },
       "indexes": {},
@@ -318,22 +385,37 @@
           "notNull": true,
           "autoincrement": true
         },
+<<<<<<< HEAD
         "book_id": {
           "name": "book_id",
+=======
+        "reserve_id": {
+          "name": "reserve_id",
+>>>>>>> crud
           "type": "int",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
+<<<<<<< HEAD
         "user_id": {
           "name": "user_id",
+=======
+        "loan_admin_id": {
+          "name": "loan_admin_id",
+>>>>>>> crud
           "type": "int",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
+<<<<<<< HEAD
         "admin_id": {
           "name": "admin_id",
+=======
+        "reception_admin_id": {
+          "name": "reception_admin_id",
+>>>>>>> crud
           "type": "int",
           "primaryKey": false,
           "notNull": false,
@@ -343,26 +425,56 @@
           "name": "loaned_at",
           "type": "date",
           "primaryKey": false,
+<<<<<<< HEAD
           "notNull": false,
+=======
+          "notNull": true,
+>>>>>>> crud
           "autoincrement": false
         },
         "expires_on": {
           "name": "expires_on",
           "type": "date",
           "primaryKey": false,
+<<<<<<< HEAD
           "notNull": false,
           "autoincrement": false
         },
         "notes": {
           "name": "notes",
+=======
+          "notNull": true,
+          "autoincrement": false
+        },
+        "initial_notes": {
+          "name": "initial_notes",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
+        },
+        "final_notes": {
+          "name": "final_notes",
+>>>>>>> crud
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+<<<<<<< HEAD
+=======
+        },
+        "state": {
+          "name": "state",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+>>>>>>> crud
         }
       },
       "indexes": {},
       "foreignKeys": {
+<<<<<<< HEAD
         "loans_book_id_books_book_id_fk": {
           "name": "loans_book_id_books_book_id_fk",
           "tableFrom": "loans",
@@ -372,16 +484,36 @@
           ],
           "columnsTo": [
             "book_id"
+=======
+        "loans_reserve_id_reserves_reserve_id_fk": {
+          "name": "loans_reserve_id_reserves_reserve_id_fk",
+          "tableFrom": "loans",
+          "tableTo": "reserves",
+          "columnsFrom": [
+            "reserve_id"
+          ],
+          "columnsTo": [
+            "reserve_id"
+>>>>>>> crud
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
+<<<<<<< HEAD
         "loans_user_id_users_user_id_fk": {
           "name": "loans_user_id_users_user_id_fk",
           "tableFrom": "loans",
           "tableTo": "users",
           "columnsFrom": [
             "user_id"
+=======
+        "loans_loan_admin_id_users_user_id_fk": {
+          "name": "loans_loan_admin_id_users_user_id_fk",
+          "tableFrom": "loans",
+          "tableTo": "users",
+          "columnsFrom": [
+            "loan_admin_id"
+>>>>>>> crud
           ],
           "columnsTo": [
             "user_id"
@@ -389,12 +521,21 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
+<<<<<<< HEAD
         "loans_admin_id_users_user_id_fk": {
           "name": "loans_admin_id_users_user_id_fk",
           "tableFrom": "loans",
           "tableTo": "users",
           "columnsFrom": [
             "admin_id"
+=======
+        "loans_reception_admin_id_users_user_id_fk": {
+          "name": "loans_reception_admin_id_users_user_id_fk",
+          "tableFrom": "loans",
+          "tableTo": "users",
+          "columnsFrom": [
+            "reception_admin_id"
+>>>>>>> crud
           ],
           "columnsTo": [
             "user_id"
@@ -552,8 +693,13 @@
           "notNull": false,
           "autoincrement": false
         },
+<<<<<<< HEAD
         "returned_on": {
           "name": "returned_on",
+=======
+        "checkout": {
+          "name": "checkout",
+>>>>>>> crud
           "type": "date",
           "primaryKey": false,
           "notNull": false,
@@ -565,6 +711,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
+<<<<<<< HEAD
         },
         "notes": {
           "name": "notes",
@@ -572,6 +719,8 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
+=======
+>>>>>>> crud
         }
       },
       "indexes": {},
@@ -613,6 +762,39 @@
       },
       "uniqueConstraints": {}
     },
+<<<<<<< HEAD
+=======
+    "user_types": {
+      "name": "user_types",
+      "columns": {
+        "user_type_id": {
+          "name": "user_type_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(15)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "user_types_user_type_id": {
+          "name": "user_types_user_type_id",
+          "columns": [
+            "user_type_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {}
+    },
+>>>>>>> crud
     "users": {
       "name": "users",
       "columns": {
@@ -637,15 +819,25 @@
           "notNull": false,
           "autoincrement": false
         },
+<<<<<<< HEAD
         "first_surname": {
           "name": "first_surname",
+=======
+        "first_sur_name": {
+          "name": "first_sur_name",
+>>>>>>> crud
           "type": "varchar(35)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
+<<<<<<< HEAD
         "second_surname": {
           "name": "second_surname",
+=======
+        "second_sur_name": {
+          "name": "second_sur_name",
+>>>>>>> crud
           "type": "varchar(35)",
           "primaryKey": false,
           "notNull": false,
@@ -665,13 +857,14 @@
           "notNull": false,
           "autoincrement": false
         },
-        "account": {
-          "name": "account",
-          "type": "varchar(11)",
+        "user_type_id": {
+          "name": "user_type_id",
+          "type": "int",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
+<<<<<<< HEAD
         "user_type": {
           "name": "user_type",
           "type": "int",
@@ -679,11 +872,13 @@
           "notNull": true,
           "autoincrement": false
         },
+=======
+>>>>>>> crud
         "reputation": {
           "name": "reputation",
           "type": "int",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "password": {
@@ -693,23 +888,41 @@
           "notNull": true,
           "autoincrement": false
         },
+<<<<<<< HEAD
         "verified": {
           "name": "verified",
+=======
+        "enabled": {
+          "name": "enabled",
+>>>>>>> crud
           "type": "boolean",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
+<<<<<<< HEAD
           "default": false
+=======
+          "default": true
+>>>>>>> crud
         }
       },
       "indexes": {},
       "foreignKeys": {
+<<<<<<< HEAD
         "users_user_type_user_types_user_type_id_fk": {
           "name": "users_user_type_user_types_user_type_id_fk",
           "tableFrom": "users",
           "tableTo": "user_types",
           "columnsFrom": [
             "user_type"
+=======
+        "users_user_type_id_user_types_user_type_id_fk": {
+          "name": "users_user_type_id_user_types_user_type_id_fk",
+          "tableFrom": "users",
+          "tableTo": "user_types",
+          "columnsFrom": [
+            "user_type_id"
+>>>>>>> crud
           ],
           "columnsTo": [
             "user_type_id"
@@ -740,16 +953,22 @@
         }
       },
       "uniqueConstraints": {
+        "users_numero_cuenta_unique": {
+          "name": "users_numero_cuenta_unique",
+          "columns": [
+            "numero_cuenta"
+          ]
+        },
         "users_email_unique": {
           "name": "users_email_unique",
           "columns": [
             "email"
           ]
         },
-        "users_account_unique": {
-          "name": "users_account_unique",
+        "users_phone_number_unique": {
+          "name": "users_phone_number_unique",
           "columns": [
-            "account"
+            "phone_number"
           ]
         }
       }
