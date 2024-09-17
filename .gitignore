@@ -1,5 +1,6 @@
 # Based on https://raw.githubusercontent.com/github/gitignore/main/Node.gitignore
 
+src/migrations
 # Logs
 
 logs
@@ -176,3 +177,4 @@ dist
 
 
 env_projectfs
+

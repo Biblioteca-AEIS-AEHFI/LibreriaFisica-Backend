@@ -1,0 +1,101 @@
+### login
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{
+  "numeroCuenta": "0987654321",
+  "password": "password"
+}
+
+### home
+GET http://localhost:3000/user/home
+
+### sign up
+POST http://localhost:3000/auth/signup
+Content-Type: application/json
+
+{
+  "numeroCuenta": "8899001122",
+  "password": "password",
+  "firstName": "elena",
+  "secondName": "maria",
+  "firstSurname": "morales",
+  "secondSurname": "gomez",
+  "email": "elena.morales@unah.hn",
+  "phoneNumber": "1019",
+  "userType": 1,
+  "reputation": 2
+}
+
+### obtener categorias
+GET http://localhost:3000/categorias
+
+### obtener categoria por id
+GET http://localhost:3000/categorias/6
+
+### obtener categoria por nombre
+GET http://localhost:3000/categorias/especialidad/matematicas
+
+### crear categoria
+POST http://localhost:3000/categorias/create
+Content-Type: application/json
+
+{
+  "name": "fisica nuclear",
+  "parentCategoryId": 5,
+  "icon": "fisicaNuclear.svg"
+}
+
+
+### eliminar categoria por id
+DELETE http://localhost:3000/categorias/5
+
+
+### eliminar categoria por nombre 
+DELETE http://localhost:3000/categorias/categoria/Fisica
+
+### obtener libros por categoria
+GET http://localhost:3000/books/especialidad/matematicas
+
+### crear un libro
+POST http://localhost:3000/books/create
+Content-Type: application/json
+
+{
+  "title": "random",
+  "description": "prueba",
+  "edition": 10,
+  "year": 2017,
+  "publisher": "pepe",
+  "language": "esp",
+  "isbn": "isbn3",
+  "amount": 15,
+  "authors": [1,2,3],
+  "categories": [1,2,3]
+}
+
+
+### get books by category name
+GET http://localhost:3000/books/especialidad/matematicas
+
+### get categories hierarchically
+GET http://localhost:3000/categorias/all
+
+### deletes a category and all its children
+DELETE http://localhost:3000/categorias/delete/6
+
+### get books by key 
+GET http://localhost:3000/search?query=fi
+
+### update category
+PUT http://localhost:3000/categorias/update
+Content-Type: application/json
+
+{
+  "categoryId": 5,
+  "name": "couches",
+  "icon": "couches.png"
+}
+
+### obtiene info para home
+GET http://localhost:3000/prestamos/estudiantes
