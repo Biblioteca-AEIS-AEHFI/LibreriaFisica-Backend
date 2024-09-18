@@ -359,7 +359,7 @@ book.post("/create", async (req: Request, res: Response) => {
  *                properties:
  *                  message:
  *                    type: string
- *                    example: Book with id: 1 updated successfully
+ *                    example: "Book with id: 1 updated successfully"
  *        404:
  *          description: Book not found
  *          content:
@@ -489,7 +489,7 @@ book.patch("/update/:bookId", async (req: Request, res: Response) => {
  *                properties:
  *                  message:
  *                    type: string
- *                    example: Book with id: 1 and related records deleted successfully
+ *                    example: "Book with id: 1 and related records deleted successfully"
  *        404:
  *          description: Book not found
  *          content:
@@ -606,7 +606,7 @@ book.delete("/:bookId", async (req: Request, res: Response) => {
  *                properties:
  *                  message:
  *                    type: string
- *                    example: No books found with title: Fisica para ingeniería
+ *                    example: "No books found with title: Fisica para ingeniería"
  *        500:
  *          description: Server error
  *          content:
@@ -687,7 +687,7 @@ book.get("/:title", async (req: Request, res: Response) => {
  *                properties:
  *                  message:
  *                    type: string
- *                    example: No books found for category ID: 1
+ *                    example: "No books found for category ID: 1"
  *        500:
  *          description: Server error
  *          content:
@@ -950,7 +950,7 @@ book.post("/categories", async (req: Request, res: Response) => {
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "Book not found" or "User not found"
+ *                   example: "Book not found"
  *       500:
  *         description: Server error
  *         content:

@@ -11,7 +11,7 @@ import { authRouter } from "./routes/auth";
 import { author } from "./routes/authors";
 import { loansRouter } from "./routes/loans";
 import { book } from "./routes/books";
-import { categoryRouter } from "./routes/category";
+import { categoriesRouter } from "./routes/category";
 import { verifyToken } from "./middleware/auth.middleware";
 import { searchRouter } from "./routes/search";
 
@@ -49,7 +49,7 @@ app.use("/prestamos", loansRouter)
 app.use("/user", userRouter);
 app.use('/search', searchRouter)
 app.use("/author", author);
-app.use('/categorias', categoryRouter)
+app.use('/categorias', categoriesRouter)
 app.use('/books', book)
 
 
