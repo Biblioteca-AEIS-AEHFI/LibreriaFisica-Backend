@@ -5,7 +5,6 @@ import {
   type NewUser,
   type User,
 } from "../db/schema/users";
-import { NewUserSchema, users, type NewUser, type User } from "../db/schema";
 import { loginSchema } from "../utils/definitions";
 import { db } from "../db/db";
 import { eq } from "drizzle-orm";
