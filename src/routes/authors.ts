@@ -10,7 +10,7 @@ import {
   UpdateAuthorSchema,
   type Author,
   type NewAuthor,
-} from "../db/schema";
+} from "../db/schema/authors";
 
 export const author: Router = Router();
 
