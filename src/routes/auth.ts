@@ -173,7 +173,7 @@ authRouter.post("/login", async (req: Request, res: Response) => {
     const userQuery: User[] | any = await db
       .select()
       .from(users)
-      .where(eq(users.account, numeroCuenta));
+      .where(eq(users.numeroCuenta, numeroCuenta));
 
     const user: User = userQuery[0];
     if (!user)
