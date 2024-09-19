@@ -5,7 +5,6 @@ import {
   type NewUser,
   type User,
 } from "../db/schema/users";
-import { NewUserSchema, users, type NewUser, type User } from "../db/schema";
 import { loginSchema } from "../utils/definitions";
 import { db } from "../db/db";
 import { eq } from "drizzle-orm";
@@ -174,7 +173,7 @@ authRouter.post("/login", async (req: Request, res: Response) => {
     const userQuery: User[] | any = await db
       .select()
       .from(users)
-      .where(eq(users.account, numeroCuenta));
+      .where(eq(users.numeroCuenta, numeroCuenta));
 
     const user: User = userQuery[0];
     if (!user)

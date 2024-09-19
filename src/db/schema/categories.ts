@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { int, varchar, foreignKey, mysqlTable } from "drizzle-orm/mysql-core";
+import { int, boolean, varchar, foreignKey, mysqlTable } from "drizzle-orm/mysql-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { categoriesPerBook } from "./categoriesPerBook";
 
@@ -10,6 +10,8 @@ export const categories = mysqlTable(
     categoryId: int("category_id").primaryKey().autoincrement(),
     parentCategoryId: int("parent_category_id"),
     name: varchar("name", { length: 30 }),
+    icon: varchar('icon', { length: 100 }),
+    enabled: boolean('enabled')
   },
   (table) => {
     return {

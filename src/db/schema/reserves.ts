@@ -10,9 +10,8 @@ export const reserves = mysqlTable("reserves", {
   bookId: int("book_id").references(() => books.bookId),
   userId: int("user_id").references(() => users.userId),
   createdAt: date("created_at"),
-  returnedOn: date("returned_on"),
+  checkOutDate: date("checkout"),
   status: varchar("status", { length: 20 }),
-  notes: text("notes"),
 });
 
 export const reservesRelations = relations(reserves, ({ one }) => ({
