@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from "express";
 import { db } from "../db/db";
 import { eq } from "drizzle-orm";
-import { users } from "../db/schema";
+import { users } from "../db/schema/users";
 import { getCheckoutDateNum, getStudenLoans } from "../utils/loans";
 import { UserHome } from "../utils/UserHome";
 import { getToken } from "../utils/tokenInfo";
