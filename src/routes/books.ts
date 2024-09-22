@@ -5,24 +5,21 @@ import { db } from "../db/db";
 import jwt from 'jsonwebtoken';
 import {
   books,
-  reserves,
-  users,
-  loans,
-  categoriesPerBook,
   BookSchema,
   NewBookSchema,
   UpdateBookSchema,
   type Book,
   type NewBook,
-  type CategoryPerBook,
-  categories,
-  PartialGetCat,
   PartialGetBook,
-  authorsPerBook,
-  type Category,
-  type Author,
-  authors,
-} from "../db/schema";
+} from "../db/schema/books";
+
+import { reserves } from "../db/schema/reserves";
+import { loans } from "../db/schema/loans";
+import { users } from "../db/schema/users";
+import { categories, PartialGetCat, type Category } from "../db/schema/categories";
+import { categoriesPerBook, type CategoryPerBook } from "../db/schema/categoriesPerBook";
+import { authors, type Author } from "../db/schema/authors";
+import { authorsPerBook } from "../db/schema/authorsPerBooks";
 
 export const book: Router = Router();
 

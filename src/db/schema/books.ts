@@ -5,6 +5,7 @@ import { authorsPerBook } from "./authorsPerBooks";
 import { categoriesPerBook } from "./categoriesPerBook";
 import { reserves } from "./reserves";
 import { loans } from "./loans";
+import { z, ZodError } from "zod";
 
 // Libros
 export const books = mysqlTable("books", {
@@ -29,6 +30,21 @@ export const booksRelations = relations(books, ({ many }) => ({
   reserves: many(reserves),
   loans: many(loans),
 }));
+
+export const UpdateBookSchema = z.object({
+  title: z.string().optional(),
+  description: z.string().optional(),
+  edition: z.string().optional(),
+  year: z.number().optional(),
+  publisher: z.string().optional(),
+  language: z.string().optional(),
+  isbn: z.string().optional(),
+  totalAmount: z.number().optional(),
+});
+
+export const PartialGetBook = z.object({
+  title: z.string(),
+});
 
 export type NewBook = typeof books.$inferInsert;
 export type Book = typeof books.$inferSelect;

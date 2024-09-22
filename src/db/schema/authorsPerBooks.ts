@@ -33,6 +33,7 @@ export const authorsPerBookRelations = relations(authorsPerBook, ({ one }) => ({
   }),
 }));
 
+
 export type NewAuthorPerBook = typeof authorsPerBook.$inferInsert;
 export type AuthorPerBook = typeof authorsPerBook.$inferSelect;
 
