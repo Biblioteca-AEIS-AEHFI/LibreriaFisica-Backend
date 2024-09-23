@@ -1,16 +1,15 @@
-import type { Request, Response } from "express"
-import { Router } from "express"
-import { eq, inArray } from "drizzle-orm"
-import { db } from "../db/db"
-import { users } from "../db/schema/users"
-import { getToken } from "../utils/tokenInfo"
-import { getCheckoutDateNum } from "../utils/loans"
-import jwt from 'jsonwebtoken';
-import { loans, type Loan } from "../db/schema/loans"
-import { reserves } from "../db/schema/reserves"
-import { books } from "../db/schema/books"
+import type { Request, Response } from "express";
+import { Router } from "express";
+import { eq, inArray } from "drizzle-orm";
+import { db } from "../db/db";
+import { users } from "../db/schema/users";
+import { getToken } from "../utils/tokenInfo";
+import jwt from "jsonwebtoken";
+import { loans } from "../db/schema/loans";
+import { reserves } from "../db/schema/reserves";
+import { books } from "../db/schema/books";
 
-const reservesRouter: Router = Router() 
+const reservesRouter: Router = Router();
 // make a loan
 
 // Manejando errores
@@ -21,13 +20,13 @@ const handleError = (res: Response, error: unknown, message: string) => {
   });
 };
 
-reservesRouter.post('/', async (req: Request, res: Response) => {
-  const loanObj: number = req.body?.idBook
-  if (!loanObj) 
-    return res.status(400).json({ meesage: 'Request body could not be read' })
+reservesRouter.post("/", async (req: Request, res: Response) => {
+  const loanObj: number = req.body?.idBook;
+  if (!loanObj)
+    return res.status(400).json({ meesage: "Request body could not be read" });
   try {
-    const token: any = getToken(req)
-    const userNumeroCuenta: string = token?.numeroCuenta
+    const token: any = getToken(req);
+    const userNumeroCuenta: string = token?.numeroCuenta;
 
     // set checkoutDate to be next day to current day
     // fridays and saturdays in the Date js object correspond to 5 and 6 respectively
@@ -40,13 +39,14 @@ reservesRouter.post('/', async (req: Request, res: Response) => {
 
     // get student who make the reserve
     // students with the worst type of reputation are not able to make loans
-    const student = await db.select().from(users).where(eq(users.numeroCuenta, userNumeroCuenta))
-    
-
-  } catch(error) {
-    res.status(500).json({ message: 'Could not make loan', outCode: false })
+    const student = await db
+      .select()
+      .from(users)
+      .where(eq(users.numeroCuenta, userNumeroCuenta));
+  } catch (error) {
+    res.status(500).json({ message: "Could not make loan", outCode: false });
   }
-})
+});
 
 /**
  * @openapi
@@ -139,7 +139,9 @@ reservesRouter.post('/', async (req: Request, res: Response) => {
 reservesRouter.get("/history", async (req: Request, res: Response) => {
   const token = req.headers.authorization?.split(" ")[1];
   if (!token) {
-    return res.status(401).json({ message: "Se requiere un token de autorización" });
+    return res
+      .status(401)
+      .json({ message: "Se requiere un token de autorización" });
   }
 
   let userId: number;
@@ -164,14 +166,16 @@ reservesRouter.get("/history", async (req: Request, res: Response) => {
 
     // Comprobar si hay reservas válidas
     if (reserveIds.length === 0) {
-      return res.status(404).json({ message: "No se encontraron reservas válidas." });
+      return res
+        .status(404)
+        .json({ message: "No se encontraron reservas válidas." });
     }
 
     // Obtener préstamos relacionados con las reservas
     const loansList: any = await db
       .select()
       .from(loans)
-      .where(inArray(loans.reserveId, reserveIds))
+      .where(inArray(loans.reserveId, reserveIds));
 
     // Agrupar préstamos por mes
     const groupedLoans: { [key: string]: any[] } = {};
@@ -182,7 +186,10 @@ reservesRouter.get("/history", async (req: Request, res: Response) => {
         .where(eq(reserves.reserveId, loan.reserveId))
         .innerJoin(books, eq(reserves.bookId, books.bookId));
 
-      const monthName = new Date(loan.loanedAt).toLocaleString("es-ES", { month: "long", year: "numeric" });
+      const monthName = new Date(loan.loanedAt).toLocaleString("es-ES", {
+        month: "long",
+        year: "numeric",
+      });
 
       if (!groupedLoans[monthName]) {
         groupedLoans[monthName] = [];
@@ -194,25 +201,28 @@ reservesRouter.get("/history", async (req: Request, res: Response) => {
         isbn: reserveDetails[0]?.isbn,
         title: reserveDetails[0]?.title,
         authors: reserveDetails[0]?.authors.join(", "),
-        checkoutDate: loan.loanedAt.toLocaleDateString('es-ES'),
-        returnDate: loan.expiresOn.toLocaleDateString('es-ES'),
-        wasOnTime: loan.state === "returned" && new Date(loan.expiresOn) >= new Date() 
+        checkoutDate: loan.loanedAt.toLocaleDateString("es-ES"),
+        returnDate: loan.expiresOn.toLocaleDateString("es-ES"),
+        wasOnTime:
+          loan.state === "returned" && new Date(loan.expiresOn) >= new Date(),
       });
     }
 
     // Convertir el objeto en un arreglo
     const response = {
-      months: Object.keys(groupedLoans).map(monthName => ({
+      months: Object.keys(groupedLoans).map((monthName) => ({
         monthName,
-        loansOnMonth: groupedLoans[monthName]
-      }))
+        loansOnMonth: groupedLoans[monthName],
+      })),
     };
 
     return res.status(200).json({
       data: response,
     });
   } catch (error) {
-    return res.status(500).json({ message: "Error al obtener el historial de préstamos", error });
+    return res
+      .status(500)
+      .json({ message: "Error al obtener el historial de préstamos", error });
   }
 });
 

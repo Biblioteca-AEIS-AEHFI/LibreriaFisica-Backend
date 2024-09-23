@@ -1,13 +1,13 @@
 import { Router, type Request, type Response } from "express";
-import { db } from "../db/db";
 import { eq, or, like } from "drizzle-orm";
-import {
-  authors,
-  authorsPerBook,
-  books,
-  categories,
-  categoriesPerBook,
-} from "../db/schema";
+
+import { authors } from "../db/schema/authors";
+import { books } from "../db/schema/books";
+import { categories } from "../db/schema/categories";
+import { categoriesPerBook } from "../db/schema/categoriesPerBook";
+import { authorsPerBook } from "../db/schema/authorsPerBooks";
+import { db } from "../db/db";
+
 import { formatAuthorsNames, getAuthorsNames } from "../utils/autoresFormat";
 import { numberToOrdinal } from "../utils/editions";
 import { getLeastCategory, trackCategories } from "../utils/categories";
@@ -97,10 +97,12 @@ searchRouter.get("/", async (req: Request, res: Response) => {
     // Use a for...of loop to handle asynchronous operations
     for (const bookEl of searchResults) {
       // books available has to be greater than 0
-      const booksAvailable: number = (await db
-        .select()
-        .from(books)
-        .where(eq(books.bookId, bookEl.books.bookId)))[0].unitsAvailable;
+      const booksAvailable: number = (
+        await db
+          .select()
+          .from(books)
+          .where(eq(books.bookId, bookEl.books.bookId))
+      )[0].unitsAvailable;
 
       const authorsByBook: string = getAuthorsNames(
         authorsNames[bookEl.books.bookId]
