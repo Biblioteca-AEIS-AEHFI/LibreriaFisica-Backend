@@ -9,7 +9,7 @@ export const reserves = mysqlTable("reserves", {
   reserveId: int("reserve_id").primaryKey().autoincrement(),
   bookId: int("book_id").references(() => books.bookId),
   userId: int("user_id").references(() => users.userId),
-  createdAt: date("created_at"),
+  createdAt: date("created_at").notNull(),
   checkOutDate: date("checkout"),
   status: varchar("status", { length: 20 }),
 });

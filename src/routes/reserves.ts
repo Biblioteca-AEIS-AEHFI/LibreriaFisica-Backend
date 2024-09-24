@@ -1,13 +1,23 @@
+import { or, and, eq, inArray } from "drizzle-orm";
 import type { Request, Response } from "express";
 import { Router } from "express";
-import { eq, inArray } from "drizzle-orm";
+import jwt from "jsonwebtoken";
 import { db } from "../db/db";
+import { books, type Book } from "../db/schema/books";
+import { loans, type Loan } from "../db/schema/loans";
+import { reserves, type Reserve } from "../db/schema/reserves";
 import { users } from "../db/schema/users";
 import { getToken } from "../utils/tokenInfo";
-import jwt from "jsonwebtoken";
-import { loans } from "../db/schema/loans";
-import { reserves } from "../db/schema/reserves";
-import { books } from "../db/schema/books";
+import { authorsPerBook } from "../db/schema/authorsPerBooks";
+import { authors } from "../db/schema/authors";
+import { promise } from "zod";
+
+// Date responses formatting options
+const dateOptions: Intl.DateTimeFormatOptions = {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+};
 
 const reservesRouter: Router = Router();
 // make a loan
@@ -224,6 +234,116 @@ reservesRouter.get("/history", async (req: Request, res: Response) => {
       .status(500)
       .json({ message: "Error al obtener el historial de préstamos", error });
   }
+});
+
+// Get loans and reserves associated to an account
+
+reservesRouter.get("/pending", async (req: Request, res: Response) => {
+  // Get account number from the session cookie
+  const token = getToken(req);
+  if (!token)
+    return res.status(400).json({ e: "Session token not present or valid." });
+
+  const userId = parseInt(token.numeroCuenta);
+
+  // Lookup data for reserves
+  const queryResults = await db
+    .select()
+    .from(reserves)
+    .innerJoin(books, eq(reserves.bookId, books.bookId))
+    .innerJoin(loans, eq(reserves.reserveId, loans.reserveId))
+    .where(
+      or(
+        and(eq(reserves.userId, userId), eq(reserves.status, "pendiente")),
+        eq(loans.state, "activo")
+      )
+    );
+
+  const reserveIds: number[] = queryResults.map(
+    ({ reserves }) => reserves.reserveId
+  );
+
+  const reservesData = await Promise.all(
+    queryResults.map(async (value) => {
+      // Deconstruct response
+      const reserveDetails = value.reserves;
+      const bookDetails = value.books;
+
+      // Fetch author names
+      const authorsResult = await db
+        .select()
+        .from(authors)
+        .innerJoin(
+          authorsPerBook,
+          eq(authors.authorId, authorsPerBook.authorId)
+        )
+        .where(eq(authorsPerBook.bookId, bookDetails.bookId));
+
+      const authorsNames: string[] = authorsResult.map(
+        ({ authors }) => `${authors.firstName} ${authors.lastName}`
+      );
+
+      // Format createdAt date
+
+      const createdAt =
+        reserveDetails.status === "vencida"
+          ? "vencida"
+          : reserveDetails.createdAt.toLocaleDateString("es-HN", dateOptions);
+
+      // Construct response object
+      return {
+        reserveId: reserveDetails.reserveId,
+        bookId: bookDetails.bookId,
+        isbn: bookDetails.isbn,
+        title: bookDetails.title,
+        authors: authorsNames,
+        createdAt: createdAt,
+      };
+    })
+  );
+
+  const loansData = await Promise.all(
+    queryResults.map(async (value) => {
+      const loanDetails: Loan = value.loans;
+      const bookDetails: Book = value.books;
+
+      // Fetch author names
+      const authorsResult = await db
+        .select()
+        .from(authors)
+        .innerJoin(
+          authorsPerBook,
+          eq(authors.authorId, authorsPerBook.authorId)
+        )
+        .where(eq(authorsPerBook.bookId, bookDetails.bookId));
+
+      const authorsNames: string[] = authorsResult.map(
+        ({ authors }) => `${authors.firstName} ${authors.lastName}`
+      );
+
+      const expiresOn = loanDetails.expiresOn.toLocaleDateString(
+        "es-HN",
+        dateOptions
+      );
+
+      return {
+        loanId: loanDetails.loanId,
+        bookId: bookDetails.bookId,
+        title: bookDetails.title,
+        authors: authorsNames,
+        expiresOn: expiresOn,
+        expired: loanDetails.expiresOn < new Date(),
+      };
+    })
+  );
+
+  // Construct the response
+  const result = {
+    reserves: reservesData,
+    loans: loansData,
+  };
+
+  return res.status(200).json(result);
 });
 
 export default reservesRouter;
