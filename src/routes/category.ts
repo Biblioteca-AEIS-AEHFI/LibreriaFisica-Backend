@@ -1,10 +1,10 @@
 import { Router, type Request, type Response } from "express";
 import {
-  type Category,
   categories,
   NewCategorySchema,
-  categoriesPerBook,
-} from "../db/schema";
+  type Category,
+} from "../db/schema/categories";
+import { categoriesPerBook } from "../db/schema/categoriesPerBook";
 import { db } from "../db/db";
 import { eq, or, and, isNull } from "drizzle-orm";
 import { saveChildren } from "../utils/categories";
