@@ -5,24 +5,22 @@ import { db } from "../db/db";
 import jwt from 'jsonwebtoken';
 import {
   books,
-  reserves,
-  users,
-  loans,
-  categoriesPerBook,
   BookSchema,
   NewBookSchema,
   UpdateBookSchema,
   type Book,
   type NewBook,
-  type CategoryPerBook,
-  categories,
-  PartialGetCat,
   PartialGetBook,
-  authorsPerBook,
-  type Category,
-  type Author,
-  authors,
-} from "../db/schema";
+} from "../db/schema/books";
+
+import { reserves } from "../db/schema/reserves";
+import { loans } from "../db/schema/loans";
+import { users } from "../db/schema/users";
+import { categories, PartialGetCat, type Category } from "../db/schema/categories";
+import { categoriesPerBook, type CategoryPerBook } from "../db/schema/categoriesPerBook";
+import { authors, type Author } from "../db/schema/authors";
+import { authorsPerBook } from "../db/schema/authorsPerBooks";
+import { userTypes } from "../db/schema/userTypes";
 
 export const book: Router = Router();
 
@@ -852,148 +850,46 @@ book.post("/categories", async (req: Request, res: Response) => {
 });
 
 // Obteniendo información detallada de un libro
-/**
- * @openapi
- * /bookdetail/{bookId}:
- *   get:
- *     tags:
- *       - Books
- *     summary: Retrieve details of a book including its reservation status
- *     parameters:
- *       - name: bookId
- *         in: path
- *         required: true
- *         schema:
- *           type: integer
- *           example: 1
- *         description: The ID of the book to retrieve details for
- *     responses:
- *       200:
- *         description: Book details retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Book fetched successfully
- *                 data:
- *                   type: object
- *                   properties:
- *                     bookId:
- *                       type: integer
- *                       example: 1
- *                     title:
- *                       type: string
- *                       example: "Sample Book Title"
- *                     description:
- *                       type: string
- *                       example: "A brief description of the book."
- *                     edition:
- *                       type: string
- *                       example: "First Edition"
- *                     year:
- *                       type: integer
- *                       example: 2024
- *                     publisher:
- *                       type: string
- *                       example: "Sample Publisher"
- *                     language:
- *                       type: string
- *                       example: "English"
- *                     isbn:
- *                       type: string
- *                       example: "978-3-16-148410-0"
- *                     authors:
- *                       type: string
- *                       example: "Author One, Author Two"
- *                     category:
- *                       type: string
- *                       example: "Fiction"
- *                     similarBooks:
- *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           bookId:
- *                             type: integer
- *                             example: 2
- *                           isbn:
- *                             type: string
- *                             example: "978-1-23-456789-0"
- *                           title:
- *                             type: string
- *                             example: "Another Sample Book Title"
- *                           authors:
- *                             type: string
- *                             example: "Author Three, Author Four"
- *                     isReserved:
- *                       type: boolean
- *                       example: true
- *       401:
- *         description: Unauthorized access, invalid or missing token
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Authorization token required"
- *       404:
- *         description: Book or user not found
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Book not found"
- *       500:
- *         description: Server error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Error searching book"
- */
 book.get("/bookdetail/:bookId", async (req: Request, res: Response) => {
   const { bookId } = validateSchema(idBookSchema, req.params, res) || {};
   if (bookId === undefined) return;
 
   try {
-    // Extraer el token de autorización y verificarlo
+    // Extraer el token de autorización
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) {
-      return res.status(401).json({ message: "Authorization token required" });
+      return res.status(401).json({ message: "Se requiere un token de autorización" });
     }
-    
+
     // Verificar y decodificar el token
     const decodedToken = jwt.verify(token, process.env.JWT_SECRET!);
     const userId = (decodedToken as any).userId;
 
     if (!userId) {
-      return res.status(401).json({ message: "Invalid token" });
+      return res.status(401).json({ message: "Token inválido" });
     }
 
-    // Obtener el número de cuenta del usuario
+    // Obtener detalles del usuario incluyendo el tipo de usuario
     const user = await db
-      .select({ numeroCuenta: users.numeroCuenta })
+      .select({
+        numeroCuenta: users.numeroCuenta,
+        userType: userTypes.name, // Obtener el nombre del tipo de usuario como cadena
+        reputation: users.reputation
+      })
       .from(users)
+      .innerJoin(userTypes, eq(users.userType, userTypes.userTypeId)) // Unir con la tabla userTypes
       .where(eq(users.userId, userId));
 
     if (user.length === 0) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: "Usuario no encontrado" });
     }
 
-    const numeroCuenta = user[0].numeroCuenta;
+    const { numeroCuenta, userType, reputation } = user[0];
 
-    // Obtener la información básica del libro
+    // Determinar si el usuario es administrador
+    const isAdmin = userType === "Administrador";
+
+    // Obtener información básica del libro
     const book = await db.select({
       bookId: books.bookId,
       title: books.title,
@@ -1008,20 +904,19 @@ book.get("/bookdetail/:bookId", async (req: Request, res: Response) => {
     .where(eq(books.bookId, bookId));
 
     if (book.length === 0) {
-      return res.status(404).json({ message: "Book not found" });
+      return res.status(404).json({ message: "Libro no encontrado" });
     }
 
-    // Verificar si el usuario ha reservado este libro
-  const isReserved = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(reserves)
-    .innerJoin(users, eq(reserves.userId, users.userId)) // Relacionar con la tabla de usuarios
-    .where(
-      eq(reserves.bookId, bookId) &&
-      (numeroCuenta ? eq(users.numeroCuenta, numeroCuenta) : sql`1 = 0`) // Si numeroCuenta es null, evita la comparación
-    )
-    .then((result) => result[0]?.count > 0); // Si hay al menos una reserva, isReserved es true
-
+    // Verificar si el usuario ha reservado este libro o si su reputación es 0
+    const canBeReserv = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(reserves)
+      .innerJoin(users, eq(reserves.userId, users.userId))
+      .where(
+        eq(reserves.bookId, bookId) &&
+        (numeroCuenta ? eq(users.numeroCuenta, numeroCuenta) : sql`1 = 0`)
+      )
+      .then((result) => result[0]?.count === 0 && reputation !== 0); // Verificar reservas y reputación
 
     // Obtener lista de autores del libro
     const authorsIdList: any = await db
@@ -1089,16 +984,17 @@ book.get("/bookdetail/:bookId", async (req: Request, res: Response) => {
     );
 
     res.status(200).json({
-      message: "Book fetched successfully",
+      message: "Libro obtenido con éxito",
       data: {
         ...book[0],
         authors: authorsList.map((author) => `${author.firstName} ${author.lastName}`).join(", "),
         category: category[0]?.name || null,
         similarBooks: similarBooksWithAuthors,
-        isReserved: isReserved, 
+        canBeReserv,
+        isAdmin
       }
     });
   } catch (error) {
-    handleError(res, error, "Error searching book");
+    handleError(res, error, "Error al buscar el libro");
   }
 });

@@ -2,6 +2,7 @@ import { relations } from "drizzle-orm";
 import { int, boolean, varchar, foreignKey, mysqlTable } from "drizzle-orm/mysql-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { categoriesPerBook } from "./categoriesPerBook";
+import { z, ZodError } from "zod";
 
 // Categorias
 export const categories = mysqlTable(
@@ -23,6 +24,10 @@ export const categories = mysqlTable(
     };
   }
 );
+
+export const PartialGetCat = z.object({
+  categoryId: z.number(),
+});
 
 export const categoriesRelations = relations(categories, ({ many }) => ({
   books: many(categoriesPerBook),
