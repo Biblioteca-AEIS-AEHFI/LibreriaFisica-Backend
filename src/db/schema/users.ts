@@ -3,12 +3,11 @@ import {
   int,
   boolean,
   varchar,
+  date,
   mysqlTable,
-  binary,
 } from "drizzle-orm/mysql-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { userTypes } from "./userTypes";
-import { reputations } from "./reputations";
 import { reserves } from "./reserves";
 import { loans } from "./loans";
 import { payments } from "./payments";
@@ -16,6 +15,7 @@ import { payments } from "./payments";
 // Usuarios
 export const users = mysqlTable("users", {
   userId: int("user_id").primaryKey().autoincrement(),
+  creationDate: date('creation_date'),
   numeroCuenta: varchar("numero_cuenta", { length: 15 }).unique(),
   firstName: varchar("first_name", { length: 35 }).notNull(),
   secondName: varchar("second_name", { length: 35 }),
@@ -24,7 +24,7 @@ export const users = mysqlTable("users", {
   email: varchar("email", { length: 40 }).notNull().unique(),
   phoneNumber: varchar("phone_number", { length: 8 }).unique(),
   userType: int("user_type_id").references(() => userTypes.userTypeId),
-  reputation: int("reputation").references(() => reputations.reputationId),
+  reputation: int("reputation"),
   password: varchar("password", { length: 60 }).notNull().unique(),
   enabled: boolean('enabled').default(true),
 });
@@ -33,10 +33,6 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   userTypes: one(userTypes, {
     fields: [users.userType],
     references: [userTypes.userTypeId],
-  }),
-  reputations: one(reputations, {
-    fields: [users.reputation],
-    references: [reputations.reputationId],
   }),
   reserves: many(reserves),
   loans: many(loans, {
