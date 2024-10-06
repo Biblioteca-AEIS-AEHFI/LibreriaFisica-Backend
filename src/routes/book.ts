@@ -227,6 +227,8 @@ async function getFullBookData(
         categoryId: categories.categoryId,
         name: categories.name,
         parentCategoryId: categories.parentCategoryId,
+        icon: categories.icon,
+        enabled: categories.enabled
       })
       .from(categories)
       .leftJoin(

@@ -5,12 +5,14 @@ import { reserves } from "./reserves";
 import { users } from "./users";
 
 // Historial de Prestamos
+// reception date is used to indicate the day a user gave a book back
 export const loans = mysqlTable("loans", {
   loanId: int("loan_id").primaryKey().autoincrement(),
-  reserveId: int("reserve_id").references(() => reserves.reserveId),
+  loanUserId: int("loan_user_id").references(() => users.userId),
   loanAdminId: int("loan_admin_id").references(() => users.userId),
   receptonAdminId: int('reception_admin_id').references(() => users.userId),
   loanedAt: date("loaned_at").notNull(),
+  receptionDate: date('reception_date').notNull(),
   expiresOn: date("expires_on").notNull(),
   initialNotes: text("initial_notes"),
   finalNotes: text('final_notes'),
